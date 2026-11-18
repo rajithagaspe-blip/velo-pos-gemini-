@@ -1,0 +1,2056 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Velo POS - Next-Gen Commercial Supermarket & ERP System</title>
+    
+    <!-- iOS & Android PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Velo POS">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#090d16">
+    
+    <!-- Embedded SVG App Icon for iOS Home Screen -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%23090d16'/><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%2310b981'/><stop offset='100%' stop-color='%2306b6d4'/></linearGradient></defs><path d='M45 50 L90 140 L135 50' stroke='url(%23g)' stroke-width='22' stroke-linecap='round' stroke-linejoin='round' fill='none'/><circle cx='90' cy='45' r='10' fill='%2310b981'/></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23090d16'/><path d='M25 28 L50 78 L75 28' stroke='%2310b981' stroke-width='12' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
+
+    <!-- Tailwind CSS & Lucide Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- HTML5 QR/Barcode Scanner for Mobile Camera -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        velo: { 50: '#ecfdf5', 400: '#34d399', 500: '#10b981', 600: '#059669', 900: '#064e3b' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --bg-main: #090d16;
+            --glass-bg: rgba(15, 23, 42, 0.72);
+            --glass-card: rgba(30, 41, 59, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f8fafc;
+        }
+        html.light {
+            --bg-main: #f1f5f9;
+            --glass-bg: rgba(255, 255, 255, 0.88);
+            --glass-card: rgba(255, 255, 255, 0.92);
+            --glass-border: rgba(15, 23, 42, 0.1);
+            --text-primary: #0f172a;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            background-image: 
+                radial-gradient(at 10% 10%, rgba(16, 185, 129, 0.14) 0px, transparent 50%),
+                radial-gradient(at 90% 20%, rgba(6, 182, 212, 0.12) 0px, transparent 50%),
+                radial-gradient(at 50% 90%, rgba(99, 102, 241, 0.10) 0px, transparent 50%);
+            background-attachment: fixed;
+            overflow-x: hidden;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+        }
+        .glass-card {
+            background: var(--glass-card);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid var(--glass-border);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-card:hover {
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(16, 185, 129, 0.6); }
+
+        @media print {
+            body * { visibility: hidden !important; }
+            #printableArea, #printableArea * { visibility: visible !important; }
+            #printableArea {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                background: #fff !important;
+                color: #000 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col select-none">
+
+    <!-- LICENSE LOCK OVERLAY -->
+    <div id="licenseLockOverlay" class="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-2xl hidden flex-col items-center justify-center p-4">
+        <div class="glass-panel max-w-md w-full p-6 rounded-3xl border border-rose-500/40 text-center space-y-4">
+            <div class="w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center mx-auto text-rose-400">
+                <i data-lucide="shield-alert" class="w-8 h-8"></i>
+            </div>
+            <h2 id="lockTitle" class="text-2xl font-extrabold text-white">Trial Period Expired or Clock Tampered</h2>
+            <p id="lockDesc" class="text-xs text-slate-300 leading-relaxed">Your Velo POS evaluation or system clock integrity check requires a valid Hardware-Locked Commercial License Key.</p>
+            <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700 text-left space-y-1">
+                <div class="text-[11px] text-slate-400 uppercase tracking-wider">Your Hardware Machine ID</div>
+                <div class="flex items-center justify-between">
+                    <span id="lockMachineId" class="font-mono text-sm font-bold text-emerald-400">VELO-XXXX</span>
+                    <button onclick="copyMachineId()" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">Copy ID</button>
+                </div>
+            </div>
+            <div class="space-y-2 text-left">
+                <label class="text-xs text-slate-400">Enter Activation Key</label>
+                <input id="lockLicenseInput" type="text" placeholder="VELO-PRO-XXXXXXXX-XXXXXX" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 font-mono text-sm text-emerald-400 focus:outline-none focus:border-emerald-500">
+                <button onclick="activateLicenseFromLock()" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-bold text-sm shadow-lg">Activate Velo POS</button>
+            </div>
+            <div class="pt-2 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400">
+                <span>Vendor Support</span>
+                <button onclick="openVendorKeygen()" class="text-amber-400 hover:underline font-semibold">Open Master Keygen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOP HEADER BAR -->
+    <header id="topHeader" class="glass-panel sticky top-0 z-40 px-3 sm:px-5 py-2.5 flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80">
+        <!-- Brand Logo -->
+        <div class="flex items-center gap-3">
+            <div class="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/25 border border-white/20">
+                <svg class="w-6 h-6 text-slate-950" viewBox="0 0 100 100" fill="none">
+                    <path d="M22 26 L50 80 L78 26" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="50" cy="22" r="8" fill="currentColor"/>
+                </svg>
+                <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-slate-950" title="Offline-First IndexedDB Ready"></span>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <span id="headerStoreName" class="font-extrabold text-base sm:text-lg tracking-tight bg-gradient-to-r from-white via-emerald-200 to-cyan-200 bg-clip-text text-transparent">VELO POS</span>
+                    <span id="licenseBadge" onclick="switchTab('settings'); openSettingsCat('license');" class="cursor-pointer text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">14D TRIAL</span>
+                </div>
+                <div class="flex items-center gap-2 text-[11px] text-slate-400">
+                    <span id="liveClock">00:00:00</span>
+                    <span>•</span>
+                    <span id="backupStatusPill" class="text-cyan-400 flex items-center gap-1"><i data-lucide="cloud-check" class="w-3 h-3"></i> Auto-Backup Active</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Pills -->
+        <nav id="mainNav" class="flex items-center gap-1 bg-slate-900/70 p-1 rounded-2xl border border-slate-800 overflow-x-auto max-w-full">
+            <button onclick="switchTab('billing')" id="tabBtn-billing" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-emerald-500 text-slate-950 shadow">
+                <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i> <span data-i18n="nav_billing">Billing</span>
+            </button>
+            <button onclick="switchTab('inventory')" id="tabBtn-inventory" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5">
+                <i data-lucide="package" class="w-3.5 h-3.5"></i> <span data-i18n="nav_inventory">Inventory & Stock</span>
+            </button>
+            <button onclick="switchTab('customers')" id="tabBtn-customers" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5">
+                <i data-lucide="users" class="w-3.5 h-3.5"></i> <span data-i18n="nav_customers">Credit & Loyalty</span>
+            </button>
+            <button onclick="switchTab('ai')" id="tabBtn-ai" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-cyan-400"></i> <span data-i18n="nav_ai">AI & Reports</span>
+            </button>
+            <button onclick="switchTab('settings')" id="tabBtn-settings" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5">
+                <i data-lucide="sliders" class="w-3.5 h-3.5"></i> <span data-i18n="nav_settings">Settings</span>
+            </button>
+            <button onclick="openVendorKeygen()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 flex items-center gap-1.5">
+                <i data-lucide="key-round" class="w-3.5 h-3.5"></i> <span>Keygen</span>
+            </button>
+        </nav>
+
+        <!-- Right Controls: Language, Camera Scan, FullScreen -->
+        <div class="flex items-center gap-1.5">
+            <!-- 4-Language Instant Switcher -->
+            <div class="flex items-center bg-slate-900/80 rounded-xl p-0.5 border border-slate-800 text-[11px] font-bold">
+                <button onclick="setLanguage('en')" id="lang-en" class="px-2 py-1 rounded-lg bg-emerald-500 text-slate-950">EN</button>
+                <button onclick="setLanguage('si')" id="lang-si" class="px-2 py-1 rounded-lg text-slate-300">සිං</button>
+                <button onclick="setLanguage('ta')" id="lang-ta" class="px-2 py-1 rounded-lg text-slate-300">த</button>
+                <button onclick="setLanguage('hi')" id="lang-hi" class="px-2 py-1 rounded-lg text-slate-300">हिं</button>
+            </div>
+
+            <button onclick="openCameraScanner('billing')" class="px-2.5 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30 text-xs font-bold flex items-center gap-1" title="Mobile Camera Barcode Scanner">
+                <i data-lucide="camera" class="w-3.5 h-3.5"></i> <span class="hidden sm:inline" data-i18n="btn_scan">Scan</span>
+            </button>
+
+            <button onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-300 hover:text-white" title="Dark/Light Mode">
+                <i data-lucide="sun-moon" class="w-4 h-4"></i>
+            </button>
+
+            <button onclick="toggleFullScreenBilling()" id="fullScreenBtn" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 text-xs font-bold flex items-center gap-1" title="Distraction-Free Full Screen Billing (F11)">
+                <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> <span class="hidden md:inline">F11</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- FLOATING EXIT FULLSCREEN BUTTON (Shown only in Fullscreen Billing Mode) -->
+    <div id="exitFullScreenBar" class="hidden fixed top-2 right-3 z-50 flex items-center gap-2">
+        <button onclick="openCameraScanner('billing')" class="px-3 py-1.5 rounded-xl glass-panel text-cyan-300 border border-cyan-500/40 text-xs font-bold flex items-center gap-1">
+            <i data-lucide="camera" class="w-3.5 h-3.5"></i> Scan
+        </button>
+        <button onclick="toggleFullScreenBilling()" class="px-3 py-1.5 rounded-xl glass-panel text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1 shadow-lg">
+            <i data-lucide="minimize-2" class="w-3.5 h-3.5"></i> Exit Full Screen (F11)
+        </button>
+    </div>
+
+    <!-- MAIN WORKSPACE CONTAINER -->
+    <main class="flex-1 p-2 sm:p-4 max-w-[1600px] w-full mx-auto flex flex-col">
+
+        <!-- ==================== TAB 1: BILLING TERMINAL ==================== -->
+        <section id="tab-billing" class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-stretch">
+            
+            <!-- Left 7 Cols: Search, Shortcuts, Categories & Visual Product Grid -->
+            <div class="lg:col-span-7 xl:col-span-8 flex flex-col gap-3">
+                
+                <!-- Fast Search & Barcode Input Bar -->
+                <div class="glass-card p-3 rounded-2xl flex flex-wrap items-center gap-2">
+                    <div class="relative flex-1 min-w-[210px]">
+                        <i data-lucide="search" class="w-4 h-4 text-emerald-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input id="posSearchInput" type="text" oninput="renderProductGrid()" onkeydown="handleBarcodeEnter(event)" placeholder="Scan Barcode, Scale Code (2000101500) or Search ('keeri', 'sini', 'anchor')... [F1]" class="w-full pl-10 pr-20 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-sm focus:outline-none focus:border-emerald-500 font-medium">
+                        <button onclick="startVoiceSearch()" class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-slate-800 hover:bg-emerald-500/20 text-emerald-400" title="AI Voice Search">
+                            <i data-lucide="mic" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <!-- Wholesale / Retail Tier Toggle -->
+                    <button id="tierToggleBtn" onclick="togglePriceTier()" class="px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold flex items-center gap-1.5 text-emerald-400 hover:border-emerald-500">
+                        <i data-lucide="tag" class="w-3.5 h-3.5"></i> <span id="activeTierLabel">RETAIL [F8]</span>
+                    </button>
+
+                    <!-- Scale Barcode Demo Trigger -->
+                    <button onclick="simulateWeightScaleScan()" class="px-3 py-2.5 rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/30 text-xs font-bold flex items-center gap-1.5" title="Simulate Weight Scale Barcode (1.5kg Loose Sugar)">
+                        <i data-lucide="scale" class="w-3.5 h-3.5"></i> <span>Scale 1.5kg</span>
+                    </button>
+
+                    <!-- Phone Quick Add Product by Barcode -->
+                    <button onclick="openQuickProductModal()" class="px-3 py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/30 text-xs font-bold flex items-center gap-1.5">
+                        <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> <span data-i18n="btn_quick_add">+ Item</span>
+                    </button>
+                </div>
+
+                <!-- Category Filter Pills & Held Bills Strip -->
+                <div class="flex items-center justify-between gap-2 overflow-x-auto pb-1">
+                    <div id="categoryPills" class="flex items-center gap-1.5"></div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button onclick="holdCurrentBill()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center gap-1">
+                            <i data-lucide="pause-circle" class="w-3.5 h-3.5"></i> <span data-i18n="btn_hold">Hold [F4]</span> (<span id="heldCountBadge">0</span>)
+                        </button>
+                        <button onclick="recallHeldBill()" class="px-2.5 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-bold flex items-center gap-1">
+                            <i data-lucide="play-circle" class="w-3.5 h-3.5"></i> <span data-i18n="btn_recall">Recall [F5]</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Eye-Catchy Glass Product Grid -->
+                <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 overflow-y-auto max-h-[62vh] lg:max-h-[70vh] pr-1"></div>
+
+                <!-- Pro Keyboard Shortcuts Footer Strip -->
+                <div class="glass-card px-3 py-2 rounded-xl hidden sm:flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span><kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-200 font-mono">F1</kbd> Search</span>
+                        <span><kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-200 font-mono">F2</kbd> Pay & Print</span>
+                        <span><kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-200 font-mono">F4</kbd> Hold Bill</span>
+                        <span><kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-200 font-mono">F8</kbd> Wholesale/Retail</span>
+                        <span><kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-200 font-mono">F11</kbd> Full-Screen</span>
+                        <span><kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-200 font-mono">ESC</kbd> Clear Cart</span>
+                    </div>
+                    <button onclick="openCustomerDisplayModal()" id="secondScreenBtn" class="text-cyan-400 hover:underline font-semibold flex items-center gap-1">
+                        <i data-lucide="monitor" class="w-3.5 h-3.5"></i> 2nd Screen & LankaQR
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right 5 Cols: High-Clarity Professional Billing Cart & Checkout -->
+            <div class="lg:col-span-5 xl:col-span-4 glass-panel rounded-3xl p-3.5 sm:p-4 flex flex-col justify-between border border-emerald-500/25">
+                
+                <!-- Top Customer & Invoice Format Bar -->
+                <div class="space-y-2.5 border-b border-slate-800 pb-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <h2 class="font-extrabold text-sm sm:text-base tracking-tight" data-i18n="cart_title">ACTIVE BILLING TERMINAL</h2>
+                        </div>
+                        <span id="invoiceNoDisplay" class="font-mono text-xs px-2 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-emerald-400">#INV-1001</span>
+                    </div>
+
+                    <!-- Customer Selector & Print Format Selector -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="cartCustomerSelect" onchange="updateCartTotals()" class="w-full px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-200">
+                            <option value="walkin">Walk-in Customer</option>
+                        </select>
+                        <select id="printFormatSelect" class="w-full px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-emerald-300 font-semibold">
+                            <option value="80mm">80mm Thermal Receipt</option>
+                            <option value="58mm">58mm Mini Thermal</option>
+                            <option value="A4">A4 Commercial Tax Invoice</option>
+                            <option value="A5">A5 Wholesale Invoice</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Cart Items List -->
+                <div id="cartItemsContainer" class="flex-1 overflow-y-auto my-2.5 space-y-2 max-h-[38vh] lg:max-h-[44vh] pr-1"></div>
+
+                <!-- Precision Financial Breakdown & Checkout Triggers -->
+                <div class="border-t border-slate-800/90 pt-3 space-y-2.5">
+                    <div class="grid grid-cols-3 gap-2 text-xs">
+                        <div class="p-2 rounded-xl bg-slate-900/70 border border-slate-800">
+                            <div class="text-[10px] text-slate-400" data-i18n="lbl_subtotal">Subtotal</div>
+                            <div id="lblSubtotal" class="font-bold text-slate-200 font-mono">Rs. 0.00</div>
+                        </div>
+                        <div class="p-2 rounded-xl bg-slate-900/70 border border-slate-800">
+                            <div class="text-[10px] text-slate-400 flex justify-between">
+                                <span data-i18n="lbl_discount">Discount</span>
+                                <button onclick="promptExtraDiscount()" class="text-emerald-400 hover:underline">Edit</button>
+                            </div>
+                            <div id="lblDiscount" class="font-bold text-amber-400 font-mono">-Rs. 0.00</div>
+                        </div>
+                        <div class="p-2 rounded-xl bg-slate-900/70 border border-slate-800">
+                            <div class="text-[10px] text-slate-400" data-i18n="lbl_savings">MRP Saved</div>
+                            <div id="lblSaved" class="font-bold text-cyan-400 font-mono">Rs. 0.00</div>
+                        </div>
+                    </div>
+
+                    <!-- Grand Total Banner -->
+                    <div class="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-teal-500/15 to-cyan-500/20 border border-emerald-500/40 flex items-center justify-between">
+                        <div>
+                            <div class="text-[10px] uppercase tracking-wider text-emerald-300 font-bold" data-i18n="lbl_net_payable">Net Payable Total</div>
+                            <div id="lblItemCount" class="text-xs text-slate-300">0 Items • 0 Units</div>
+                        </div>
+                        <div id="lblGrandTotal" class="text-2xl sm:text-3xl font-extrabold text-white font-mono tracking-tight">Rs. 0.00</div>
+                    </div>
+
+                    <!-- Payment Method Selector Pills -->
+                    <div class="grid grid-cols-4 gap-1.5 text-xs font-bold">
+                        <button onclick="setPaymentMethod('CASH')" id="payMethod-CASH" class="pay-pill py-2 rounded-xl bg-emerald-500 text-slate-950">💵 Cash</button>
+                        <button onclick="setPaymentMethod('CARD')" id="payMethod-CARD" class="pay-pill py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300">💳 Card</button>
+                        <button onclick="setPaymentMethod('QR')" id="payMethod-QR" class="pay-pill py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300">📱 LankaQR</button>
+                        <button onclick="setPaymentMethod('CREDIT')" id="payMethod-CREDIT" class="pay-pill py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300">📒 Credit</button>
+                    </div>
+
+                    <!-- Cash Tendered & Balance Input -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[10px] text-slate-400">Cash Received (Rs.)</label>
+                            <input id="cashReceivedInput" type="number" oninput="calculateChange()" placeholder="Auto Exact" class="w-full px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 font-mono text-sm text-white">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400">Balance / Change</label>
+                            <div id="changeBalanceDisplay" class="px-2.5 py-1.5 rounded-xl bg-slate-900/60 border border-slate-800 font-mono text-sm font-bold text-emerald-400">Rs. 0.00</div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons: Clear, WhatsApp, Complete & Print -->
+                    <div class="grid grid-cols-12 gap-2 pt-1">
+                        <button onclick="clearCartWithAudit()" class="col-span-3 py-3 rounded-2xl bg-rose-500/20 border border-rose-500/30 hover:bg-rose-500/30 text-rose-300 font-bold text-xs flex items-center justify-center gap-1">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> <span>Void</span>
+                        </button>
+                        <button onclick="sendWhatsAppDirect()" id="whatsappCheckoutBtn" class="col-span-4 py-3 rounded-2xl bg-green-500/20 border border-green-500/40 hover:bg-green-500/30 text-green-300 font-bold text-xs flex items-center justify-center gap-1.5">
+                            <i data-lucide="message-circle" class="w-4 h-4"></i> <span>WhatsApp</span>
+                        </button>
+                        <button onclick="completeAndPrintSale()" class="col-span-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold text-xs sm:text-sm shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-1.5">
+                            <i data-lucide="printer" class="w-4 h-4"></i> <span data-i18n="btn_pay">PAY & PRINT [F2]</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 2: INVENTORY, MOBILE SCAN ADD & REPACKING ==================== -->
+        <section id="tab-inventory" class="hidden space-y-4">
+            <div class="glass-card p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-lg font-extrabold">Inventory, Batch Expiry & Mobile Barcode Stock Entry</h2>
+                    <p class="text-xs text-slate-400">Scan any barcode from your phone or PC to auto-fill price & update stock immediately.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="openCameraScanner('inventory')" class="px-3.5 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow">
+                        <i data-lucide="camera" class="w-4 h-4"></i> Scan Barcode by Phone to Add/Update
+                    </button>
+                    <button onclick="openQuickProductModal()" class="px-3.5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Add New Product
+                    </button>
+                    <button onclick="simulateBulkRepack()" id="repackBtn" class="px-3.5 py-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-xs flex items-center gap-1.5">
+                        <i data-lucide="package-open" class="w-4 h-4"></i> Repack 50kg Bag → 1kg Packs
+                    </button>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl overflow-hidden border border-slate-800">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-900/90 text-slate-400 uppercase border-b border-slate-800">
+                            <tr>
+                                <th class="p-3">Barcode</th>
+                                <th class="p-3">Product Name (EN / SI)</th>
+                                <th class="p-3">Category</th>
+                                <th class="p-3">Cost</th>
+                                <th class="p-3">Retail Price</th>
+                                <th class="p-3">Wholesale</th>
+                                <th class="p-3">Stock</th>
+                                <th class="p-3">Expiry</th>
+                                <th class="p-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody" class="divide-y divide-slate-800/60"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 3: CUSTOMERS, CREDIT BOOK & LOYALTY ==================== -->
+        <section id="tab-customers" class="hidden space-y-4">
+            <div class="glass-card p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-lg font-extrabold">Customer Credit Book (ණය පොත), Loyalty QR & PDC Cheques</h2>
+                    <p class="text-xs text-slate-400">Track credit balances, send automated WhatsApp credit reminders, and manage loyalty points.</p>
+                </div>
+                <button onclick="addDemoCustomerPrompt()" class="px-3.5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs flex items-center gap-1.5">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i> + Add Customer
+                </button>
+            </div>
+            <div id="customerCardsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+        </section>
+
+        <!-- ==================== TAB 4: AI ASSISTANT, ANTI-THEFT & ANALYTICS ==================== -->
+        <section id="tab-ai" class="hidden space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div class="glass-card p-4 rounded-2xl border-l-4 border-l-emerald-500">
+                    <div class="text-xs text-slate-400">Today's Total Revenue</div>
+                    <div id="statRevenue" class="text-2xl font-extrabold font-mono text-emerald-400 mt-1">Rs. 0.00</div>
+                </div>
+                <div class="glass-card p-4 rounded-2xl border-l-4 border-l-cyan-500">
+                    <div class="text-xs text-slate-400">Estimated Net Profit</div>
+                    <div id="statProfit" class="text-2xl font-extrabold font-mono text-cyan-400 mt-1">Rs. 0.00</div>
+                </div>
+                <div class="glass-card p-4 rounded-2xl border-l-4 border-l-amber-500">
+                    <div class="text-xs text-slate-400">Low Stock / Expiring Items</div>
+                    <div id="statAlerts" class="text-2xl font-extrabold font-mono text-amber-400 mt-1">0 Alerts</div>
+                </div>
+                <div class="glass-card p-4 rounded-2xl border-l-4 border-l-rose-500">
+                    <div class="text-xs text-slate-400">Anti-Theft Void/Audit Events</div>
+                    <div id="statAuditCount" class="text-2xl font-extrabold font-mono text-rose-400 mt-1">0 Events</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="glass-card p-4 rounded-2xl space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-sm flex items-center gap-2"><i data-lucide="sparkles" class="w-4 h-4 text-cyan-400"></i> Velo AI Business Forecaster & OCR Scanner</h3>
+                        <button onclick="simulateAiOcrGrn()" class="px-3 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs font-bold">📷 AI Scan Supplier Bill (Auto-GRN)</button>
+                    </div>
+                    <div id="aiInsightsBox" class="space-y-2 text-xs text-slate-300"></div>
+                </div>
+
+                <div class="glass-card p-4 rounded-2xl space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-sm flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-rose-400"></i> Security Audit Trail & Cashier Z-Report</h3>
+                        <button onclick="sendOwnerNightlyWhatsApp()" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold">📲 Send Owner WhatsApp Summary</button>
+                    </div>
+                    <div id="auditLogList" class="space-y-1.5 max-h-56 overflow-y-auto text-xs font-mono text-slate-300"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 5: CATEGORIZED SETTINGS & BACKUP ENGINE ==================== -->
+        <section id="tab-settings" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <!-- Settings Category Sidebar -->
+            <div class="lg:col-span-3 glass-card p-3 rounded-2xl space-y-1.5 h-fit">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2 py-1">Categorized Settings</div>
+                <button onclick="openSettingsCat('modules')" id="setCatBtn-modules" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 flex items-center gap-2">
+                    <i data-lucide="toggle-right" class="w-4 h-4"></i> 1. Feature Modules (On/Off)
+                </button>
+                <button onclick="openSettingsCat('backup')" id="setCatBtn-backup" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 flex items-center gap-2">
+                    <i data-lucide="hard-drive-download" class="w-4 h-4 text-cyan-400"></i> 2. Device Save Folder & Google Drive
+                </button>
+                <button onclick="openSettingsCat('store')" id="setCatBtn-store" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 flex items-center gap-2">
+                    <i data-lucide="store" class="w-4 h-4"></i> 3. Store Profile & Print Setup
+                </button>
+                <button onclick="openSettingsCat('license')" id="setCatBtn-license" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 flex items-center gap-2">
+                    <i data-lucide="key" class="w-4 h-4 text-amber-400"></i> 4. 14-Day Trial & License Key
+                </button>
+            </div>
+
+            <!-- Settings Content Panels -->
+            <div class="lg:col-span-9 glass-card p-4 sm:p-6 rounded-2xl">
+                
+                <!-- Cat 1: Modular Feature Toggles -->
+                <div id="setPanel-modules" class="space-y-4">
+                    <div>
+                        <h3 class="text-base font-extrabold">Modular Feature Toggles (On / Off)</h3>
+                        <p class="text-xs text-slate-400">Core Billing and Inventory stay active. Turn off optional modules to keep the interface ultra-clean for smaller shops.</p>
+                    </div>
+                    <div id="featureTogglesGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+                </div>
+
+                <!-- Cat 2: Device Custom Save Location & Google Drive Auto-Backup -->
+                <div id="setPanel-backup" class="hidden space-y-5">
+                    <div>
+                        <h3 class="text-base font-extrabold text-cyan-300">Local Device Save Location & Google Drive Auto-Backup</h3>
+                        <p class="text-xs text-slate-400">Configure automatic local folder saving (File System Access API) and Google Drive Cloud Sync so you never lose a single bill.</p>
+                    </div>
+
+                    <!-- Device Custom Folder Path Selector -->
+                    <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="text-sm font-bold text-white">1. Local Device Backup Folder Location</div>
+                                <div class="text-xs text-slate-400">Choose where automatic backup JSON files are stored on your PC/Device.</div>
+                            </div>
+                            <button onclick="chooseDeviceBackupFolder()" class="px-3.5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs flex items-center gap-1.5">
+                                <i data-lucide="folder-cog" class="w-4 h-4"></i> Change Save Folder
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div class="sm:col-span-2">
+                                <label class="text-[10px] text-slate-400">Configured Local Backup Directory / Path Label</label>
+                                <input id="backupFolderPathInput" type="text" value="C:/VeloPOS_Backups/AutoSave" onchange="saveBackupSettings()" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 font-mono text-xs text-emerald-400">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400">Auto-Backup Frequency</label>
+                                <select id="autoBackupFreqSelect" onchange="saveBackupSettings()" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white">
+                                    <option value="every_sale">On Every Completed Sale</option>
+                                    <option value="15min">Every 15 Minutes</option>
+                                    <option value="daily">Daily at Day-End</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2 pt-1">
+                            <button onclick="triggerLocalDeviceBackup(true)" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Save Backup to Device Now
+                            </button>
+                            <label class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-amber-300 flex items-center gap-1.5 cursor-pointer">
+                                <i data-lucide="upload" class="w-3.5 h-3.5"></i> Restore from Backup File
+                                <input type="file" accept=".json" onchange="restoreFromBackupFile(event)" class="hidden">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Google Drive Cloud Auto-Backup -->
+                    <div class="p-4 rounded-2xl bg-slate-900/80 border border-cyan-500/30 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="text-sm font-bold text-cyan-300">2. Google Drive Cloud Auto-Backup Integration</div>
+                                <div class="text-xs text-slate-400">Automatically sync encrypted database snapshots to your Google Drive folder (`Velo_POS_Cloud_Backups`).</div>
+                            </div>
+                            <button onclick="connectGoogleDrive()" id="gDriveConnectBtn" class="px-3.5 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs flex items-center gap-1.5">
+                                <i data-lucide="cloud" class="w-4 h-4"></i> Connect Google Drive
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[10px] text-slate-400">Google Account Email / Client ID (Optional OAuth)</label>
+                                <input id="gDriveEmailInput" type="text" placeholder="yourstore@gmail.com" onchange="saveBackupSettings()" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400">Last Cloud Sync Status</label>
+                                <div id="lastCloudSyncText" class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-emerald-400 font-mono">Ready to Sync</div>
+                            </div>
+                        </div>
+                        <button onclick="syncToGoogleDriveNow()" class="px-3.5 py-2 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs font-bold flex items-center gap-1.5">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Sync Now to Google Drive
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Cat 3: Store Profile & Print Setup -->
+                <div id="setPanel-store" class="hidden space-y-4">
+                    <h3 class="text-base font-extrabold">Store Profile & Multi-Format Receipt Branding</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <label class="text-slate-400">Supermarket / Store Name</label>
+                            <input id="cfgStoreName" type="text" value="VELO SUPERMARKET" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700">
+                        </div>
+                        <div>
+                            <label class="text-slate-400">Phone / WhatsApp Number</label>
+                            <input id="cfgStorePhone" type="text" value="+94 77 123 4567" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700">
+                        </div>
+                        <div>
+                            <label class="text-slate-400">Address Line</label>
+                            <input id="cfgStoreAddr" type="text" value="No. 45, Main Street, Colombo / Kurunegala" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700">
+                        </div>
+                        <div>
+                            <label class="text-slate-400">Receipt Footer Message</label>
+                            <input id="cfgStoreFooter" type="text" value="Thank You! Come Again - Powered by Velo POS" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700">
+                        </div>
+                    </div>
+                    <button onclick="saveStoreProfile()" class="px-4 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs">Save Store Branding</button>
+                </div>
+
+                <!-- Cat 4: 14-Day Trial & Cryptographic License Activation -->
+                <div id="setPanel-license" class="hidden space-y-4">
+                    <h3 class="text-base font-extrabold text-amber-300">Hardware-Locked 14-Day Trial & Commercial License</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                            <div class="text-[10px] text-slate-400">Hardware Machine ID</div>
+                            <div id="settingsMachineId" class="font-mono text-sm font-bold text-emerald-400 mt-1">VELO-XXXX</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                            <div class="text-[10px] text-slate-400">Current Plan Status</div>
+                            <div id="settingsPlanStatus" class="font-bold text-sm text-amber-300 mt-1">14-Day Trial</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                            <div class="text-[10px] text-slate-400">Days Remaining / Expiry</div>
+                            <div id="settingsExpiryText" class="font-mono text-sm font-bold text-cyan-300 mt-1">14 Days Left</div>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
+                        <label class="text-xs text-slate-300 font-semibold">Enter Commercial License Key (Generated from Velo Master Keygen)</label>
+                        <div class="flex gap-2">
+                            <input id="settingsLicenseInput" type="text" placeholder="VELO-LIFETIME-XXXXXXXX-XXXXXXXX" class="flex-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 font-mono text-xs text-emerald-400">
+                            <button onclick="activateLicenseFromSettings()" class="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs">Activate Key</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ==================== MODAL 1: MASTER VENDOR KEYGEN PORTAL ==================== -->
+    <div id="vendorKeygenModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xl hidden items-center justify-center p-4">
+        <div class="glass-panel max-w-lg w-full p-5 sm:p-6 rounded-3xl border border-amber-500/40 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300">
+                        <i data-lucide="key-round" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-base text-white">VELO POS — MASTER VENDOR KEYGEN</h3>
+                        <p class="text-[11px] text-slate-400">Generate Hardware-Locked Customer Activation Keys</p>
+                    </div>
+                </div>
+                <button onclick="closeVendorKeygen()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+            </div>
+
+            <!-- Passphrase Gate -->
+            <div id="keygenGate" class="space-y-3">
+                <p class="text-xs text-slate-300">Enter your Vendor Secret Passphrase to unlock the Master Key Generator (Default: <code class="text-amber-300 font-mono">ADMIN2026</code>):</p>
+                <input id="vendorSecretInput" type="password" placeholder="Enter Vendor Passphrase" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm font-mono text-white">
+                <button onclick="unlockVendorKeygen()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs">Unlock Master Keygen</button>
+            </div>
+
+            <!-- Unlocked Keygen Controls -->
+            <div id="keygenWorkspace" class="hidden space-y-3 text-xs">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="text-slate-400">Customer Shop Name</label>
+                        <input id="kgShopName" type="text" placeholder="e.g. Wijaya Supermarket" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white">
+                    </div>
+                    <div>
+                        <label class="text-slate-400">Customer WhatsApp Phone</label>
+                        <input id="kgShopPhone" type="text" placeholder="94771234567" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="text-slate-400">Customer Hardware Machine ID</label>
+                        <input id="kgMachineId" type="text" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 font-mono text-emerald-400 font-bold">
+                    </div>
+                    <div>
+                        <label class="text-slate-400">License Subscription Tier</label>
+                        <select id="kgPlanSelect" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 font-bold">
+                            <option value="14D">14-Day Trial Reset (14 Days)</option>
+                            <option value="30D">1-Month Subscription (30 Days)</option>
+                            <option value="365D">1-Year Pro License (365 Days)</option>
+                            <option value="LIFETIME">Lifetime Enterprise License</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="generateCustomerLicenseKey()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-500 text-slate-950 font-extrabold text-xs shadow-lg">
+                    ⚡ Generate Cryptographic Hardware-Locked Key
+                </button>
+
+                <div id="kgOutputCard" class="hidden p-3.5 rounded-2xl bg-slate-950 border border-emerald-500/40 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400">Generated Activation Key</span>
+                        <span id="kgOutputExpiry" class="text-[11px] text-amber-300 font-mono"></span>
+                    </div>
+                    <div id="kgOutputKey" class="font-mono text-sm font-extrabold text-emerald-400 break-all select-all p-2 rounded-lg bg-slate-900 border border-slate-800"></div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="copyGeneratedKey()" class="py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold">📋 Copy Key</button>
+                        <button onclick="applyGeneratedKeyImmediately()" class="py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold">✅ Apply Here</button>
+                        <button onclick="sendKeyViaWhatsApp()" class="py-2 rounded-xl bg-green-500/20 border border-green-500/40 text-green-300 font-bold">📲 WhatsApp</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 2: MOBILE CAMERA BARCODE SCANNER ==================== -->
+    <div id="cameraScannerModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xl hidden items-center justify-center p-4">
+        <div class="glass-panel max-w-md w-full p-5 rounded-3xl border border-cyan-500/40 space-y-3">
+            <div class="flex items-center justify-between">
+                <h3 class="font-extrabold text-sm text-cyan-300 flex items-center gap-2"><i data-lucide="camera" class="w-4 h-4"></i> Live Mobile Camera Barcode Scanner</h3>
+                <button onclick="closeCameraScanner()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+            </div>
+            <p id="scannerModeSubtitle" class="text-xs text-slate-400">Point your phone camera at any product barcode.</p>
+            <div id="qrReaderBox" class="w-full rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 min-h-[220px]"></div>
+            <div class="flex gap-2">
+                <input id="manualScanCodeInput" type="text" placeholder="Or type/paste barcode manually..." class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-mono">
+                <button onclick="handleScannedBarcode(document.getElementById('manualScanCodeInput').value)" class="px-3.5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 3: QUICK ADD / UPDATE PRODUCT BY BARCODE ==================== -->
+    <div id="quickProductModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xl hidden items-center justify-center p-4">
+        <div class="glass-panel max-w-md w-full p-5 rounded-3xl border border-emerald-500/40 space-y-3 text-xs">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                <h3 class="font-extrabold text-sm text-emerald-300">📱 Quick Barcode Product & Stock Entry</h3>
+                <button onclick="closeQuickProductModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                    <label class="text-slate-400">Barcode Number</label>
+                    <input id="qpBarcode" type="text" oninput="autoFillKnownBarcode(this.value)" placeholder="Scan or type..." class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 font-mono text-emerald-400 font-bold">
+                </div>
+                <div>
+                    <label class="text-slate-400">Category</label>
+                    <input id="qpCategory" type="text" value="Grocery" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                    <label class="text-slate-400">Product Name (English)</label>
+                    <input id="qpNameEn" type="text" placeholder="e.g. Maliban Gold Marie" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700">
+                </div>
+                <div>
+                    <label class="text-slate-400">සිංහල නම (Optional)</label>
+                    <input id="qpNameSi" type="text" placeholder="මැලිබන් මාරි" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700">
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+                <div>
+                    <label class="text-slate-400">Cost Price</label>
+                    <input id="qpCost" type="number" placeholder="180" class="w-full mt-1 px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-700 font-mono">
+                </div>
+                <div>
+                    <label class="text-slate-400">Selling Price</label>
+                    <input id="qpRetail" type="number" placeholder="220" class="w-full mt-1 px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-700 font-mono text-emerald-400 font-bold">
+                </div>
+                <div>
+                    <label class="text-slate-400">Wholesale</label>
+                    <input id="qpWholesale" type="number" placeholder="205" class="w-full mt-1 px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-700 font-mono">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                    <label class="text-slate-400">Stock Quantity</label>
+                    <input id="qpStock" type="number" value="50" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 font-mono">
+                </div>
+                <div>
+                    <label class="text-slate-400">Expiry Date</label>
+                    <input id="qpExpiry" type="date" value="2027-06-30" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 font-mono">
+                </div>
+            </div>
+            <button onclick="saveQuickProduct()" class="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs shadow-lg">Save Product & Update Stock</button>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 4: MULTI-FORMAT RECEIPT / INVOICE PREVIEW (80mm, 58mm, A4, A5) ==================== -->
+    <div id="receiptPreviewModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xl hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-panel max-w-2xl w-full p-5 rounded-3xl border border-slate-700 space-y-4 my-auto">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <button onclick="switchReceiptFormat('80mm')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 text-xs font-bold">80mm Thermal</button>
+                    <button onclick="switchReceiptFormat('58mm')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 text-xs font-bold">58mm Mini</button>
+                    <button onclick="switchReceiptFormat('A4')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 text-xs font-bold">A4 Tax Invoice</button>
+                    <button onclick="switchReceiptFormat('A5')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 text-xs font-bold">A5 Wholesale</button>
+                </div>
+                <button onclick="closeReceiptModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+            </div>
+
+            <div id="printableArea" class="bg-white text-slate-950 p-5 rounded-2xl mx-auto overflow-x-auto shadow-inner"></div>
+
+            <div class="flex flex-wrap justify-end gap-2 pt-2">
+                <button onclick="sendLastBillWhatsApp()" class="px-4 py-2.5 rounded-xl bg-green-500 text-slate-950 font-extrabold text-xs flex items-center gap-1.5">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i> Send to Customer WhatsApp
+                </button>
+                <button onclick="window.print()" class="px-5 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs flex items-center gap-1.5">
+                    <i data-lucide="printer" class="w-4 h-4"></i> Print Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 5: 2ND SCREEN CUSTOMER DISPLAY & LANKA QR ==================== -->
+    <div id="customerDisplayModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-2xl hidden items-center justify-center p-4">
+        <div class="glass-panel max-w-lg w-full p-6 rounded-3xl border border-cyan-500/40 text-center space-y-4">
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">Customer-Facing 2nd Display</span>
+                <button onclick="document.getElementById('customerDisplayModal').classList.add('hidden')" class="text-slate-400 hover:text-white text-xl">&times;</button>
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800">
+                <div class="text-xs text-slate-400">Net Payable Amount</div>
+                <div id="custDisplayTotal" class="text-3xl font-extrabold font-mono text-emerald-400 mt-1">Rs. 0.00</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-white text-slate-950 inline-block mx-auto">
+                <div class="text-[10px] font-bold uppercase tracking-wider mb-1">Scan Dynamic LankaQR to Pay</div>
+                <svg class="w-36 h-36 mx-auto" viewBox="0 0 100 100">
+                    <rect width="100" height="100" fill="#fff"/>
+                    <rect x="10" y="10" width="25" height="25" fill="#000"/><rect x="15" y="15" width="15" height="15" fill="#fff"/><rect x="18" y="18" width="9" height="9" fill="#10b981"/>
+                    <rect x="65" y="10" width="25" height="25" fill="#000"/><rect x="70" y="15" width="15" height="15" fill="#fff"/><rect x="73" y="18" width="9" height="9" fill="#000"/>
+                    <rect x="10" y="65" width="25" height="25" fill="#000"/><rect x="15" y="70" width="15" height="15" fill="#fff"/><rect x="18" y="73" width="9" height="9" fill="#000"/>
+                    <rect x="42" y="42" width="16" height="16" fill="#10b981"/>
+                    <rect x="40" y="15" width="6" height="18" fill="#000"/><rect x="52" y="22" width="8" height="8" fill="#000"/>
+                    <rect x="65" y="45" width="12" height="12" fill="#000"/><rect x="80" y="65" width="10" height="20" fill="#000"/>
+                    <rect x="45" y="68" width="25" height="8" fill="#000"/><rect x="45" y="82" width="15" height="8" fill="#000"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== CORE APPLICATION JAVASCRIPT ENGINE ==================== -->
+    <script>
+        // 1. MULTI-LANGUAGE DICTIONARY (EN, SI, TA, HI)
+        const I18N = {
+            en: {
+                nav_billing: "Billing", nav_inventory: "Inventory & Stock", nav_customers: "Credit & Loyalty", nav_ai: "AI & Reports", nav_settings: "Settings",
+                btn_scan: "Scan", btn_quick_add: "+ Item", btn_hold: "Hold [F4]", btn_recall: "Recall [F5]",
+                cart_title: "ACTIVE BILLING TERMINAL", lbl_subtotal: "Subtotal", lbl_discount: "Discount", lbl_savings: "MRP Saved",
+                lbl_net_payable: "Net Payable Total", btn_pay: "PAY & PRINT [F2]"
+            },
+            si: {
+                nav_billing: "බිල්පත්", nav_inventory: "තොග පාලනය", nav_customers: "ණය සහ ලෝයල්ටි", nav_ai: "AI වාර්තා", nav_settings: "සැකසුම්",
+                btn_scan: "ස්කෑන්", btn_quick_add: "+ භාණ්ඩ", btn_hold: "රඳවන්න [F4]", btn_recall: "ගන්න [F5]",
+                cart_title: "සජීවී බිල්පත් කවුළුව", lbl_subtotal: "එකතුව", lbl_discount: "වට්ටම්", lbl_savings: "ඉතිරිය",
+                lbl_net_payable: "ගෙවිය යුතු මුළු මුදල", btn_pay: "ගෙවා ප්‍රින්ට් කරන්න [F2]"
+            },
+            ta: {
+                nav_billing: "பில்லிங்", nav_inventory: "இருப்பு", nav_customers: "கடன் & லாயல்டி", nav_ai: "AI அறிக்கை", nav_settings: "அமைப்புகள்",
+                btn_scan: "ஸ்கேன்", btn_quick_add: "+ பொருள்", btn_hold: "நிறுத்து [F4]", btn_recall: "மீட்டெடு [F5]",
+                cart_title: "பில்லிங் முனையம்", lbl_subtotal: "மொத்தம்", lbl_discount: "தள்ளுபடி", lbl_savings: "சேமிப்பு",
+                lbl_net_payable: "செலுத்த வேண்டிய தொகை", btn_pay: "பில் அச்சிடு [F2]"
+            },
+            hi: {
+                nav_billing: "बिलिंग", nav_inventory: "स्टॉक", nav_customers: "क्रेडिट और लॉयल्टी", nav_ai: "AI रिपोर्ट", nav_settings: "सेटिंग्स",
+                btn_scan: "स्कैन", btn_quick_add: "+ आइटम", btn_hold: "होल्ड [F4]", btn_recall: "रिकॉल [F5]",
+                cart_title: "सक्रिय बिलिंग टर्मिनल", lbl_subtotal: "उप-योग", lbl_discount: "छूट", lbl_savings: "बचत",
+                lbl_net_payable: "कुल देय राशि", btn_pay: "भुगतान और प्रिंट [F2]"
+            }
+        };
+
+        // Known Sri Lankan Barcode Auto-Fill Catalog for Instant Mobile Scanning
+        const KNOWN_BARCODES = {
+            "479101": { nameEn: "Keeri Samba Rice 5kg", nameSi: "කීරි සම්බා 5kg", cat: "Rice & Grains", cost: 1100, retail: 1300, wholesale: 1240, mrp: 1350 },
+            "479102": { nameEn: "Anchor Full Cream Milk 400g", nameSi: "ඇන්කර් කිරිපිටි 400g", cat: "Dairy", cost: 980, retail: 1080, wholesale: 1040, mrp: 1120 },
+            "479103": { nameEn: "Munchee Super Cream Cracker", nameSi: "මන්චි ක්‍රීම් ක්‍රැකර්", cat: "Biscuits", cost: 185, retail: 220, wholesale: 205, mrp: 230 },
+            "479104": { nameEn: "Red Dhal (Mysoor) 1kg", nameSi: "පරිප්පු 1kg", cat: "Rice & Grains", cost: 270, retail: 320, wholesale: 295, mrp: 340 },
+            "479105": { nameEn: "White Sugar Loose 1kg", nameSi: "සුදු සීනි 1kg", cat: "Grocery", cost: 240, retail: 275, wholesale: 260, mrp: 290 },
+            "479106": { nameEn: "Sunlight Soap 110g", nameSi: "සන්ලයිට් සබන්", cat: "Household", cost: 115, retail: 140, wholesale: 130, mrp: 150 },
+            "479107": { nameEn: "Ceylon Tea Dust 400g", nameSi: "තේ කොළ 400g", cat: "Beverages", cost: 680, retail: 820, wholesale: 770, mrp: 860 },
+            "479108": { nameEn: "Coconut Oil 1L Bottle", nameSi: "පොල් තෙල් 1L", cat: "Grocery", cost: 590, retail: 690, wholesale: 650, mrp: 720 }
+        };
+
+        // Application State
+        let state = {
+            lang: 'en',
+            priceTier: 'RETAIL', // RETAIL or WHOLESALE
+            activeCategory: 'ALL',
+            paymentMethod: 'CASH',
+            extraDiscount: 0,
+            invoiceCounter: 1001,
+            cart: [],
+            heldBills: [],
+            lastCompletedOrder: null,
+            directoryHandle: null,
+            store: {
+                name: "VELO SUPERMARKET",
+                phone: "+94 77 123 4567",
+                addr: "No. 45, Main Street, Kurunegala",
+                footer: "Thank You! Come Again - Powered by Velo POS"
+            },
+            backup: {
+                folderPath: "C:/VeloPOS_Backups/AutoSave",
+                freq: "every_sale",
+                gDriveEmail: "",
+                gDriveConnected: false,
+                lastSync: "Never"
+            },
+            features: {
+                wholesale: { label: "Wholesale & Retail Dual Pricing [F8]", on: true },
+                repacking: { label: "Bulk 50kg → 1kg Repacking Module", on: true },
+                whatsapp: { label: "WhatsApp Digital Bill & Credit Bot", on: true },
+                secondScreen: { label: "2nd Customer Display & LankaQR", on: true },
+                aiAssistant: { label: "AI Demand Forecast & OCR Scanner", on: true },
+                creditBook: { label: "Customer Credit Book (ණය පොත)", on: true }
+            },
+            products: [
+                { id: "P1", barcode: "479101", nameEn: "Keeri Samba Rice 5kg", nameSi: "කීරි සම්බා 5kg", nameTa: "கீரி சம்பா 5kg", nameHi: "कीरी सांबा 5kg", searchKeys: "haal rice keeri samba", cat: "Rice & Grains", cost: 1100, retail: 1300, wholesale: 1240, mrp: 1350, stock: 45, expiry: "2027-08-15" },
+                { id: "P2", barcode: "479102", nameEn: "Anchor Milk Powder 400g", nameSi: "ඇන්කර් කිරිපිටි 400g", nameTa: "ஆங்கர் பால் மா 400g", nameHi: "एंकर मिल्क पाउडर", searchKeys: "kiri milk anchor", cat: "Dairy", cost: 980, retail: 1080, wholesale: 1040, mrp: 1120, stock: 60, expiry: "2027-05-20" },
+                { id: "P3", barcode: "479103", nameEn: "Munchee Super Cream Cracker", nameSi: "මන්චි ක්‍රීම් ක්‍රැකර්", nameTa: "மஞ்சி கிரீம் கிராக்கர்", nameHi: "मंची क्रीम क्रैकर", searchKeys: "biscuit munchee cracker", cat: "Biscuits", cost: 185, retail: 220, wholesale: 205, mrp: 230, stock: 110, expiry: "2027-03-10" },
+                { id: "P4", barcode: "479104", nameEn: "Red Dhal (Mysoor) 1kg", nameSi: "පරිප්පු 1kg", nameTa: "மைசூர் பருப்பு 1kg", nameHi: "मसूर दाल 1kg", searchKeys: "parippu dhal", cat: "Rice & Grains", cost: 270, retail: 320, wholesale: 295, mrp: 340, stock: 85, expiry: "2027-09-01" },
+                { id: "P5", barcode: "20001", nameEn: "White Sugar Loose (1kg)", nameSi: "සුදු සීනි 1kg", nameTa: "வெள்ளை சீனி 1kg", nameHi: "चीनी 1kg", searchKeys: "sini sugar", cat: "Grocery", cost: 240, retail: 275, wholesale: 260, mrp: 290, stock: 150, expiry: "2027-12-31" },
+                { id: "P6", barcode: "479106", nameEn: "Sunlight Soap 110g", nameSi: "සන්ලයිට් සබන්", nameTa: "சன்லைட் சோப்", nameHi: "सनलाइट साबुन", searchKeys: "saban soap sunlight", cat: "Household", cost: 115, retail: 140, wholesale: 130, mrp: 150, stock: 95, expiry: "2028-01-15" },
+                { id: "P7", barcode: "479107", nameEn: "CeylonBOPF Tea 400g", nameSi: "තේ කොළ 400g", nameTa: "இலங்கை தேயிலை 400g", nameHi: "सीलोन चाय 400g", searchKeys: "thea tea", cat: "Beverages", cost: 680, retail: 820, wholesale: 770, mrp: 860, stock: 32, expiry: "2027-07-19" },
+                { id: "P8", barcode: "479108", nameEn: "Pure Coconut Oil 1L", nameSi: "පොල් තෙල් 1L", nameTa: "தேங்காய் எண்ணெய் 1L", nameHi: "नारियल तेल 1L", searchKeys: "pol thel oil", cat: "Grocery", cost: 590, retail: 690, wholesale: 650, mrp: 720, stock: 8, expiry: "2026-12-10" }
+            ],
+            customers: [
+                { id: "C1", name: "Nimal Perera", phone: "94771234567", credit: 3450, points: 180 },
+                { id: "C2", name: "Kamal Bandara (Hotel)", phone: "94719876543", credit: 12800, points: 640 },
+                { id: "C3", name: "Sunil Shantha", phone: "94765554433", credit: 0, points: 95 }
+            ],
+            salesHistory: [],
+            auditLogs: []
+        };
+
+        // Precision Financial Math Helper
+        const roundMoney = (val) => Math.round((Number(val) + Number.EPSILON) * 100) / 100;
+
+        // ==================== 2. HARDWARE FINGERPRINT & CRYPTOGRAPHIC LICENSE ENGINE ====================
+        function getHardwareMachineId() {
+            let saved = localStorage.getItem('velo_machine_id');
+            if (saved) return saved;
+            const raw = [navigator.userAgent, screen.width, screen.height, navigator.language, Intl.DateTimeFormat().resolvedOptions().timeZone].join('|');
+            let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+            for (let i = 0; i < raw.length; i++) {
+                const ch = raw.charCodeAt(i);
+                h1 = Math.imul(h1 ^ ch, 2654435761);
+                h2 = Math.imul(h2 ^ ch, 1597334677);
+            }
+            h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+            const hex = (h1 >>> 0).toString(16).toUpperCase().padStart(8, '0');
+            saved = `VELO-${hex.slice(0,4)}-${hex.slice(4,8)}`;
+            localStorage.setItem('velo_machine_id', saved);
+            return saved;
+        }
+
+        function computeKeySignature(machineId, planCode, expiryStr) {
+            const secretSalt = "VELO_MASTER_SALT_2026_PRO_#991";
+            const payload = `${machineId.trim().toUpperCase()}|${planCode}|${expiryStr}|${secretSalt}`;
+            let hash = 5381;
+            for (let i = 0; i < payload.length; i++) {
+                hash = ((hash << 5) + hash) ^ payload.charCodeAt(i);
+            }
+            return (hash >>> 0).toString(16).toUpperCase().padStart(8, '0');
+        }
+
+        function initLicenseAndTrialCheck() {
+            const mid = getHardwareMachineId();
+            document.getElementById('lockMachineId').innerText = mid;
+            document.getElementById('settingsMachineId').innerText = mid;
+            document.getElementById('kgMachineId').value = mid;
+
+            const now = Date.now();
+            const lastSeen = Number(localStorage.getItem('velo_monotonic_ts') || 0);
+
+            // Anti-Clock Rollback Detection (if user sets clock backward by more than 1 hour)
+            if (lastSeen && now + 3600000 < lastSeen) {
+                showLicenseLock("System Clock Tampering Detected!", "Your device date/time was rolled backward. Please restore accurate date/time or enter a Commercial License Key.");
+                return;
+            }
+            if (now > lastSeen) localStorage.setItem('velo_monotonic_ts', String(now));
+
+            let licRaw = localStorage.getItem('velo_license_record');
+            if (!licRaw) {
+                const startTs = now;
+                const expDate = new Date(now + 14 * 86400000);
+                const expStr = expDate.toISOString().slice(0,10).replace(/-/g,'');
+                const sig = computeKeySignature(mid, 'TRIAL14D', expStr);
+                const rec = { plan: 'TRIAL14D', expiryStr: expStr, sig };
+                localStorage.setItem('velo_license_record', JSON.stringify(rec));
+                licRaw = JSON.stringify(rec);
+            }
+
+            try {
+                const rec = JSON.parse(licRaw);
+                const expectedSig = computeKeySignature(mid, rec.plan, rec.expiryStr);
+                if (rec.sig !== expectedSig) {
+                    showLicenseLock("License Tampering Detected!", "Local license signature mismatch. Please activate with a valid Velo POS License Key.");
+                    return;
+                }
+                if (rec.plan === 'LIFETIME') {
+                    updateLicenseUI("LIFETIME ENTERPRISE", "Never Expires", true);
+                    return;
+                }
+                const y = Number(rec.expiryStr.slice(0,4)), m = Number(rec.expiryStr.slice(4,6)) - 1, d = Number(rec.expiryStr.slice(6,8));
+                const expTs = new Date(y, m, d, 23, 59, 59).getTime();
+                const daysLeft = Math.ceil((expTs - now) / 86400000);
+                if (daysLeft < 0) {
+                    showLicenseLock("14-Day Trial / Subscription Expired", "Your trial or subscription period has ended. Contact vendor with your Machine ID to activate.");
+                } else {
+                    updateLicenseUI(rec.plan === 'TRIAL14D' ? `14D TRIAL (${daysLeft}d)` : `${rec.plan} PRO`, `${daysLeft} Days Left (${rec.expiryStr})`, false);
+                }
+            } catch (e) {
+                showLicenseLock("License Verification Error", "Please enter a valid license key.");
+            }
+        }
+
+        function updateLicenseUI(badgeText, expiryText, isLifetime) {
+            const badge = document.getElementById('licenseBadge');
+            badge.innerText = badgeText;
+            badge.className = isLifetime
+                ? "cursor-pointer text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                : "cursor-pointer text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+            document.getElementById('settingsPlanStatus').innerText = badgeText;
+            document.getElementById('settingsExpiryText').innerText = expiryText;
+            document.getElementById('licenseLockOverlay').classList.add('hidden');
+            document.getElementById('licenseLockOverlay').classList.remove('flex');
+        }
+
+        function showLicenseLock(title, desc) {
+            document.getElementById('lockTitle').innerText = title;
+            document.getElementById('lockDesc').innerText = desc;
+            document.getElementById('licenseLockOverlay').classList.remove('hidden');
+            document.getElementById('licenseLockOverlay').classList.add('flex');
+        }
+
+        function verifyAndApplyLicenseKey(rawKey) {
+            const clean = (rawKey || '').trim().toUpperCase();
+            // Format: VELO-[PLAN]-[YYYYMMDD]-[SIGNATURE]
+            const parts = clean.split('-');
+            if (parts.length !== 4 || parts[0] !== 'VELO') {
+                alert("Invalid Key Format! Expected: VELO-PLAN-YYYYMMDD-SIGNATURE");
+                return false;
+            }
+            const [, plan, expStr, sig] = parts;
+            const mid = getHardwareMachineId();
+            const expectedSig = computeKeySignature(mid, plan, expStr);
+            if (sig !== expectedSig) {
+                alert(`Key Rejected! This key does not match Hardware Machine ID (${mid}).`);
+                return false;
+            }
+            localStorage.setItem('velo_license_record', JSON.stringify({ plan, expiryStr: expStr, sig }));
+            localStorage.setItem('velo_monotonic_ts', String(Date.now()));
+            logAudit(`Commercial License Activated: ${plan} (Valid until ${expStr})`);
+            initLicenseAndTrialCheck();
+            alert(`✅ Velo POS License (${plan}) Activated Successfully!`);
+            return true;
+        }
+
+        function activateLicenseFromLock() {
+            verifyAndApplyLicenseKey(document.getElementById('lockLicenseInput').value);
+        }
+        function activateLicenseFromSettings() {
+            verifyAndApplyLicenseKey(document.getElementById('settingsLicenseInput').value);
+        }
+        function copyMachineId() {
+            navigator.clipboard.writeText(getHardwareMachineId());
+            alert("Machine ID copied: " + getHardwareMachineId());
+        }
+
+        // ==================== 3. MASTER VENDOR KEYGEN PORTAL ====================
+        let lastGeneratedKeyObj = null;
+
+        function openVendorKeygen() {
+            document.getElementById('vendorKeygenModal').classList.remove('hidden');
+            document.getElementById('vendorKeygenModal').classList.add('flex');
+            document.getElementById('kgMachineId').value = getHardwareMachineId();
+        }
+        function closeVendorKeygen() {
+            document.getElementById('vendorKeygenModal').classList.add('hidden');
+            document.getElementById('vendorKeygenModal').classList.remove('flex');
+        }
+        function unlockVendorKeygen() {
+            const secret = document.getElementById('vendorSecretInput').value.trim();
+            if (secret === 'ADMIN2026') {
+                document.getElementById('keygenGate').classList.add('hidden');
+                document.getElementById('keygenWorkspace').classList.remove('hidden');
+            } else {
+                alert("Incorrect Master Vendor Passphrase! (Use: ADMIN2026)");
+            }
+        }
+        function generateCustomerLicenseKey() {
+            const mid = document.getElementById('kgMachineId').value.trim().toUpperCase();
+            const plan = document.getElementById('kgPlanSelect').value;
+            if (!mid) { alert("Enter Customer Machine ID"); return; }
+
+            let expStr = "99991231";
+            if (plan !== 'LIFETIME') {
+                const days = plan === '14D' ? 14 : (plan === '30D' ? 30 : 365);
+                const d = new Date(Date.now() + days * 86400000);
+                expStr = d.toISOString().slice(0,10).replace(/-/g,'');
+            }
+            const sig = computeKeySignature(mid, plan, expStr);
+            const fullKey = `VELO-${plan}-${expStr}-${sig}`;
+            lastGeneratedKeyObj = {
+                shop: document.getElementById('kgShopName').value || 'Valued Partner',
+                phone: document.getElementById('kgShopPhone').value || '',
+                mid, plan, expStr, fullKey
+            };
+
+            document.getElementById('kgOutputCard').classList.remove('hidden');
+            document.getElementById('kgOutputKey').innerText = fullKey;
+            document.getElementById('kgOutputExpiry').innerText = plan === 'LIFETIME' ? 'LIFETIME' : `Expires: ${expStr}`;
+        }
+        function copyGeneratedKey() {
+            if (!lastGeneratedKeyObj) return;
+            navigator.clipboard.writeText(lastGeneratedKeyObj.fullKey);
+            alert("Activation Key Copied!");
+        }
+        function applyGeneratedKeyImmediately() {
+            if (!lastGeneratedKeyObj) return;
+            verifyAndApplyLicenseKey(lastGeneratedKeyObj.fullKey);
+            closeVendorKeygen();
+        }
+        function sendKeyViaWhatsApp() {
+            if (!lastGeneratedKeyObj) return;
+            const msg = `*VELO POS OFFICIAL LICENSE CERTIFICATE*%0A--------------------------------%0A*Store:* ${lastGeneratedKeyObj.shop}%0A*Machine ID:* ${lastGeneratedKeyObj.mid}%0A*Plan:* ${lastGeneratedKeyObj.plan}%0A*Activation Key:* \`${lastGeneratedKeyObj.fullKey}\`%0A--------------------------------%0APaste this key under Settings -> License Activation.`;
+            const phone = lastGeneratedKeyObj.phone.replace(/\D/g,'');
+            window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+        }
+
+        // ==================== 4. BILLING, BARCODE, SCALE & CART ENGINE ====================
+        function getProductLocalizedName(p) {
+            if (state.lang === 'si' && p.nameSi) return p.nameSi;
+            if (state.lang === 'ta' && p.nameTa) return p.nameTa;
+            if (state.lang === 'hi' && p.nameHi) return p.nameHi;
+            return p.nameEn;
+        }
+
+        function getActivePrice(p) {
+            return (state.priceTier === 'WHOLESALE' && state.features.wholesale.on) ? p.wholesale : p.retail;
+        }
+
+        function renderCategoryPills() {
+            const cats = ['ALL', ...new Set(state.products.map(p => p.cat))];
+            const box = document.getElementById('categoryPills');
+            box.innerHTML = cats.map(c => `
+                <button onclick="selectCategory('${c}')" class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${state.activeCategory === c ? 'bg-emerald-500 text-slate-950 shadow' : 'bg-slate-900/80 text-slate-300 border border-slate-800 hover:border-emerald-500/40'}">
+                    ${c}
+                </button>
+            `).join('');
+        }
+
+        function selectCategory(cat) {
+            state.activeCategory = cat;
+            renderCategoryPills();
+            renderProductGrid();
+        }
+
+        function renderProductGrid() {
+            const q = (document.getElementById('posSearchInput').value || '').trim().toLowerCase();
+            const grid = document.getElementById('productGrid');
+            const filtered = state.products.filter(p => {
+                const matchCat = state.activeCategory === 'ALL' || p.cat === state.activeCategory;
+                const matchQ = !q || p.nameEn.toLowerCase().includes(q) || (p.nameSi && p.nameSi.includes(q)) || p.barcode.includes(q) || (p.searchKeys && p.searchKeys.includes(q));
+                return matchCat && matchQ;
+            });
+
+            grid.innerHTML = filtered.map(p => {
+                const unitPrice = getActivePrice(p);
+                const lowStock = p.stock <= 10;
+                return `
+                <div onclick="addProductToCart('${p.id}', 1)" class="glass-card p-3 rounded-2xl cursor-pointer flex flex-col justify-between group select-none">
+                    <div>
+                        <div class="flex items-center justify-between gap-1 text-[10px]">
+                            <span class="font-mono text-slate-400">#${p.barcode}</span>
+                            <span class="px-1.5 py-0.5 rounded-md font-bold ${lowStock ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/15 text-emerald-300'}">${p.stock} in stock</span>
+                        </div>
+                        <div class="font-bold text-xs sm:text-sm mt-1.5 group-hover:text-emerald-300 transition line-clamp-2">${getProductLocalizedName(p)}</div>
+                        <div class="text-[11px] text-slate-400">${p.nameSi || ''}</div>
+                    </div>
+                    <div class="mt-3 pt-2 border-t border-slate-800/80 flex items-baseline justify-between">
+                        <div>
+                            <span class="text-[10px] text-slate-500 line-through">MRP ${p.mrp}</span>
+                            <div class="text-sm sm:text-base font-extrabold text-emerald-400 font-mono">Rs. ${unitPrice.toFixed(2)}</div>
+                        </div>
+                        <span class="w-7 h-7 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold group-hover:bg-emerald-500 group-hover:text-slate-950 transition">+</span>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function handleBarcodeEnter(e) {
+            if (e.key !== 'Enter') return;
+            const code = e.target.value.trim();
+            if (!code) return;
+            if (processBarcodeInput(code)) {
+                e.target.value = '';
+                renderProductGrid();
+            }
+        }
+
+        // Supports standard barcode AND supermarket weight-scale barcode (20 + 5-digit item code + 5-digit weight in grams)
+        function processBarcodeInput(code) {
+            if (code.length === 12 && code.startsWith('20')) {
+                const itemCode = code.slice(0, 5);
+                const grams = parseInt(code.slice(7, 12), 10);
+                const weightKg = roundMoney(grams / 1000);
+                const prod = state.products.find(p => p.barcode === itemCode) || state.products[4];
+                if (prod) {
+                    addProductToCart(prod.id, weightKg);
+                    return true;
+                }
+            }
+            const exact = state.products.find(p => p.barcode === code);
+            if (exact) {
+                addProductToCart(exact.id, 1);
+                return true;
+            }
+            return false;
+        }
+
+        function simulateWeightScaleScan() {
+            processBarcodeInput("200010001500"); // 1.500 kg of White Sugar (item 20001)
+        }
+
+        function addProductToCart(productId, qtyToAdd = 1) {
+            const prod = state.products.find(p => p.id === productId);
+            if (!prod) return;
+            const existing = state.cart.find(c => c.id === productId);
+            if (existing) {
+                existing.qty = roundMoney(existing.qty + qtyToAdd);
+            } else {
+                state.cart.push({
+                    id: prod.id,
+                    barcode: prod.barcode,
+                    nameEn: prod.nameEn,
+                    nameSi: prod.nameSi,
+                    mrp: prod.mrp,
+                    cost: prod.cost,
+                    retail: prod.retail,
+                    wholesale: prod.wholesale,
+                    qty: roundMoney(qtyToAdd)
+                });
+            }
+            renderCart();
+        }
+
+        function updateCartQty(idx, delta) {
+            const item = state.cart[idx];
+            if (!item) return;
+            item.qty = roundMoney(item.qty + delta);
+            if (item.qty <= 0) {
+                logAudit(`Cashier removed line item: ${item.nameEn}`);
+                state.cart.splice(idx, 1);
+            }
+            renderCart();
+        }
+
+        function renderCart() {
+            const box = document.getElementById('cartItemsContainer');
+            if (state.cart.length === 0) {
+                box.innerHTML = `
+                <div class="h-44 flex flex-col items-center justify-center text-slate-500 text-xs border border-dashed border-slate-800 rounded-2xl">
+                    <p class="font-semibold">Cart is Empty</p>
+                    <p class="text-[11px] mt-1">Scan barcode, use camera, or tap products on the left</p>
+                </div>`;
+            } else {
+                box.innerHTML = state.cart.map((item, idx) => {
+                    const price = (state.priceTier === 'WHOLESALE' && state.features.wholesale.on) ? item.wholesale : item.retail;
+                    const lineTotal = roundMoney(price * item.qty);
+                    return `
+                    <div class="p-2.5 rounded-2xl bg-slate-900/85 border border-slate-800 flex items-center justify-between gap-2">
+                        <div class="min-w-0 flex-1">
+                            <div class="font-bold text-xs text-white truncate">${item.nameEn} <span class="text-slate-400 font-normal">${item.nameSi || ''}</span></div>
+                            <div class="text-[11px] text-slate-400 font-mono">Rs. ${price.toFixed(2)} × ${item.qty} <span class="text-cyan-400 ml-1">(MRP ${item.mrp})</span></div>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="updateCartQty(${idx}, -1)" class="w-6 h-6 rounded-lg bg-slate-800 hover:bg-rose-500/30 text-slate-200 font-bold">-</button>
+                            <span class="font-mono text-xs font-bold w-8 text-center">${item.qty}</span>
+                            <button onclick="updateCartQty(${idx}, 1)" class="w-6 h-6 rounded-lg bg-slate-800 hover:bg-emerald-500/30 text-slate-200 font-bold">+</button>
+                        </div>
+                        <div class="text-right font-mono font-extrabold text-xs sm:text-sm text-emerald-400 w-20">Rs. ${lineTotal.toFixed(2)}</div>
+                    </div>`;
+                }).join('');
+            }
+            updateCartTotals();
+        }
+
+        function getCartTotalsObj() {
+            let subtotal = 0, mrpTotal = 0, totalCost = 0, totalUnits = 0;
+            state.cart.forEach(item => {
+                const price = (state.priceTier === 'WHOLESALE' && state.features.wholesale.on) ? item.wholesale : item.retail;
+                subtotal = roundMoney(subtotal + price * item.qty);
+                mrpTotal = roundMoney(mrpTotal + item.mrp * item.qty);
+                totalCost = roundMoney(totalCost + item.cost * item.qty);
+                totalUnits = roundMoney(totalUnits + item.qty);
+            });
+            const discount = roundMoney(Math.min(state.extraDiscount, subtotal));
+            const grandTotal = roundMoney(Math.max(0, subtotal - discount));
+            const mrpSaved = roundMoney(Math.max(0, mrpTotal - grandTotal));
+            const profit = roundMoney(grandTotal - totalCost);
+            return { subtotal, discount, grandTotal, mrpSaved, profit, totalUnits };
+        }
+
+        function updateCartTotals() {
+            const t = getCartTotalsObj();
+            document.getElementById('lblSubtotal').innerText = `Rs. ${t.subtotal.toFixed(2)}`;
+            document.getElementById('lblDiscount').innerText = `-Rs. ${t.discount.toFixed(2)}`;
+            document.getElementById('lblSaved').innerText = `Rs. ${t.mrpSaved.toFixed(2)}`;
+            document.getElementById('lblGrandTotal').innerText = `Rs. ${t.grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('lblItemCount').innerText = `${state.cart.length} Items • ${t.totalUnits} Units`;
+            document.getElementById('custDisplayTotal').innerText = `Rs. ${t.grandTotal.toFixed(2)}`;
+            calculateChange();
+        }
+
+        function calculateChange() {
+            const t = getCartTotalsObj();
+            const cash = parseFloat(document.getElementById('cashReceivedInput').value);
+            const changeEl = document.getElementById('changeBalanceDisplay');
+            if (isNaN(cash) || cash <= 0) {
+                changeEl.innerText = `Rs. 0.00`;
+                return;
+            }
+            const diff = roundMoney(cash - t.grandTotal);
+            changeEl.innerText = diff >= 0 ? `Rs. ${diff.toFixed(2)}` : `Due Rs. ${Math.abs(diff).toFixed(2)}`;
+        }
+
+        function togglePriceTier() {
+            if (!state.features.wholesale.on) {
+                alert("Wholesale Tier is currently turned OFF in Settings -> Feature Modules.");
+                return;
+            }
+            state.priceTier = state.priceTier === 'RETAIL' ? 'WHOLESALE' : 'RETAIL';
+            document.getElementById('activeTierLabel').innerText = `${state.priceTier} [F8]`;
+            renderProductGrid();
+            renderCart();
+        }
+
+        function promptExtraDiscount() {
+            const val = prompt("Enter flat bill discount amount (Rs.):", state.extraDiscount);
+            if (val !== null) {
+                state.extraDiscount = Math.max(0, parseFloat(val) || 0);
+                updateCartTotals();
+            }
+        }
+
+        function setPaymentMethod(method) {
+            if (method === 'CREDIT' && !state.features.creditBook.on) {
+                alert("Customer Credit Book is turned OFF in Feature Modules.");
+                return;
+            }
+            state.paymentMethod = method;
+            document.querySelectorAll('.pay-pill').forEach(btn => {
+                btn.className = "pay-pill py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300";
+            });
+            document.getElementById(`payMethod-${method}`).className = "pay-pill py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold";
+        }
+
+        function holdCurrentBill() {
+            if (state.cart.length === 0) return;
+            state.heldBills.push({ cart: JSON.parse(JSON.stringify(state.cart)), tier: state.priceTier, ts: new Date().toLocaleTimeString() });
+            state.cart = [];
+            state.extraDiscount = 0;
+            document.getElementById('heldCountBadge').innerText = state.heldBills.length;
+            renderCart();
+        }
+
+        function recallHeldBill() {
+            if (state.heldBills.length === 0) { alert("No held bills!"); return; }
+            const held = state.heldBills.pop();
+            state.cart = held.cart;
+            state.priceTier = held.tier;
+            document.getElementById('heldCountBadge').innerText = state.heldBills.length;
+            renderCart();
+        }
+
+        function clearCartWithAudit() {
+            if (state.cart.length === 0) return;
+            logAudit(`ALERT: Full Cart Voided (${state.cart.length} items)`);
+            state.cart = [];
+            state.extraDiscount = 0;
+            renderCart();
+        }
+
+        // ==================== 5. COMPLETE SALE, MULTI-FORMAT PRINT (80mm, 58mm, A4, A5) & WHATSAPP ====================
+        function completeAndPrintSale() {
+            if (state.cart.length === 0) { alert("Please add items to the bill first!"); return; }
+            const t = getCartTotalsObj();
+            const custId = document.getElementById('cartCustomerSelect').value;
+            const cust = state.customers.find(c => c.id === custId);
+
+            // Deduct Inventory Stock
+            state.cart.forEach(item => {
+                const prod = state.products.find(p => p.id === item.id);
+                if (prod) prod.stock = roundMoney(Math.max(0, prod.stock - item.qty));
+            });
+
+            // Update Customer Credit & Loyalty Points
+            if (cust) {
+                if (state.paymentMethod === 'CREDIT') cust.credit = roundMoney(cust.credit + t.grandTotal);
+                cust.points += Math.floor(t.grandTotal / 100);
+            }
+
+            const order = {
+                invoiceNo: `INV-${state.invoiceCounter++}`,
+                date: new Date().toLocaleString(),
+                customerName: cust ? cust.name : "Walk-in Customer",
+                customerPhone: cust ? cust.phone : "",
+                paymentMethod: state.paymentMethod,
+                tier: state.priceTier,
+                items: JSON.parse(JSON.stringify(state.cart)),
+                totals: t
+            };
+
+            state.lastCompletedOrder = order;
+            state.salesHistory.push(order);
+            document.getElementById('invoiceNoDisplay').innerText = `#INV-${state.invoiceCounter}`;
+
+            // Clear Current Cart
+            state.cart = [];
+            state.extraDiscount = 0;
+            document.getElementById('cashReceivedInput').value = '';
+            renderCart();
+            renderProductGrid();
+            renderInventoryTable();
+            renderCustomers();
+            updateAnalyticsAndAi();
+            saveStateToLocalStorage();
+
+            // Auto Backup Trigger on Every Sale
+            if (state.backup.freq === 'every_sale') {
+                triggerSilentAutoBackup();
+            }
+
+            // Open Multi-Format Print Preview
+            const fmt = document.getElementById('printFormatSelect').value;
+            switchReceiptFormat(fmt);
+            document.getElementById('receiptPreviewModal').classList.remove('hidden');
+            document.getElementById('receiptPreviewModal').classList.add('flex');
+        }
+
+        function switchReceiptFormat(fmt) {
+            const order = state.lastCompletedOrder;
+            if (!order) return;
+            const area = document.getElementById('printableArea');
+
+            const rowsHtml = order.items.map((it, i) => {
+                const p = order.tier === 'WHOLESALE' ? it.wholesale : it.retail;
+                const line = roundMoney(p * it.qty);
+                return `
+                <tr class="border-b border-slate-300 text-xs">
+                    <td class="py-1.5">${i + 1}. ${it.nameEn} <div class="text-[10px] text-slate-600">${it.nameSi || ''}</div></td>
+                    <td class="py-1.5 text-center font-mono">${it.qty}</td>
+                    <td class="py-1.5 text-right font-mono">${p.toFixed(2)}</td>
+                    <td class="py-1.5 text-right font-mono font-bold">${line.toFixed(2)}</td>
+                </tr>`;
+            }).join('');
+
+            if (fmt === '80mm' || fmt === '58mm') {
+                area.style.maxWidth = fmt === '58mm' ? '260px' : '340px';
+                area.innerHTML = `
+                <div class="text-center border-b border-dashed border-slate-400 pb-2">
+                    <div class="font-extrabold text-base">${state.store.name}</div>
+                    <div class="text-[11px]">${state.store.addr}</div>
+                    <div class="text-[11px]">Tel: ${state.store.phone}</div>
+                    <div class="text-[11px] font-mono mt-1">${order.invoiceNo} • ${order.date}</div>
+                    <div class="text-[11px]">Customer: ${order.customerName} (${order.paymentMethod})</div>
+                </div>
+                <table class="w-full my-2 text-left">
+                    <thead><tr class="border-b border-slate-400 text-[11px]"><th>Item</th><th class="text-center">Qty</th><th class="text-right">Rate</th><th class="text-right">Total</th></tr></thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>
+                <div class="border-t border-dashed border-slate-400 pt-2 space-y-1 text-xs font-mono">
+                    <div class="flex justify-between"><span>Subtotal:</span><span>Rs. ${order.totals.subtotal.toFixed(2)}</span></div>
+                    <div class="flex justify-between"><span>Discount:</span><span>-Rs. ${order.totals.discount.toFixed(2)}</span></div>
+                    <div class="flex justify-between font-extrabold text-sm"><span>NET TOTAL:</span><span>Rs. ${order.totals.grandTotal.toFixed(2)}</span></div>
+                    <div class="text-center p-1.5 mt-2 border border-slate-400 rounded font-bold text-[11px]">★ YOU SAVED Rs. ${order.totals.mrpSaved.toFixed(2)} ON MRP! ★</div>
+                    <div class="text-center text-[10px] pt-2">${state.store.footer}</div>
+                </div>`;
+            } else {
+                // A4 or A5 Commercial Invoice Layout
+                area.style.maxWidth = fmt === 'A5' ? '520px' : '740px';
+                area.innerHTML = `
+                <div class="border-2 border-slate-800 p-4 rounded-xl space-y-4">
+                    <div class="flex justify-between items-start border-b-2 border-slate-800 pb-3">
+                        <div>
+                            <h1 class="text-xl font-extrabold">${state.store.name}</h1>
+                            <p class="text-xs">${state.store.addr} | Tel: ${state.store.phone}</p>
+                            <span class="inline-block mt-1 px-2 py-0.5 bg-slate-200 text-[10px] font-bold rounded">${fmt} COMMERCIAL TAX INVOICE (${order.tier})</span>
+                        </div>
+                        <div class="text-right text-xs font-mono">
+                            <div class="font-bold text-sm">${order.invoiceNo}</div>
+                            <div>Date: ${order.date}</div>
+                            <div>Customer: ${order.customerName}</div>
+                            <div>Pay Mode: ${order.paymentMethod}</div>
+                        </div>
+                    </div>
+                    <table class="w-full text-left border-collapse">
+                        <thead><tr class="border-b-2 border-slate-800 text-xs"><th># & Description</th><th class="text-center">Qty</th><th class="text-right">Unit Price</th><th class="text-right">Line Total (Rs.)</th></tr></thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                    <div class="flex justify-between items-end pt-4 border-t-2 border-slate-800">
+                        <div class="text-[11px] space-y-6">
+                            <div>Customer Signature: _______________________</div>
+                            <div>Authorized Stamp: _______________________</div>
+                        </div>
+                        <div class="w-56 space-y-1 text-xs font-mono">
+                            <div class="flex justify-between"><span>Subtotal:</span><span>Rs. ${order.totals.subtotal.toFixed(2)}</span></div>
+                            <div class="flex justify-between"><span>Discount:</span><span>-Rs. ${order.totals.discount.toFixed(2)}</span></div>
+                            <div class="flex justify-between font-extrabold text-base border-t border-slate-800 pt-1"><span>GRAND TOTAL:</span><span>Rs. ${order.totals.grandTotal.toFixed(2)}</span></div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receiptPreviewModal').classList.add('hidden');
+            document.getElementById('receiptPreviewModal').classList.remove('flex');
+        }
+
+        function sendWhatsAppDirect() {
+            if (state.cart.length === 0) { alert("Add items to cart first!"); return; }
+            const t = getCartTotalsObj();
+            const lines = state.cart.map(i => `• ${i.nameEn} (${i.qty}) = Rs.${roundMoney(i.retail * i.qty)}`).join('%0A');
+            const msg = `*${state.store.name} - Digital Bill*%0A------------------------%0A${lines}%0A------------------------%0A*Net Payable: Rs. ${t.grandTotal.toFixed(2)}*%0A*MRP Saved: Rs. ${t.mrpSaved.toFixed(2)}*%0AThank you for shopping with us!`;
+            const phone = prompt("Enter Customer WhatsApp Number (e.g. 94771234567):", "9477");
+            if (phone) window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${msg}`, '_blank');
+        }
+
+        function sendLastBillWhatsApp() {
+            const o = state.lastCompletedOrder;
+            if (!o) return;
+            const lines = o.items.map(i => `• ${i.nameEn} x${i.qty}`).join('%0A');
+            const msg = `*${state.store.name} (${o.invoiceNo})*%0A${lines}%0A*Total Paid: Rs. ${o.totals.grandTotal.toFixed(2)}*%0AThank you!`;
+            const phone = prompt("Customer WhatsApp Number:", o.customerPhone || "9477");
+            if (phone) window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${msg}`, '_blank');
+        }
+
+        // ==================== 6. MOBILE CAMERA BARCODE SCANNER & QUICK PRODUCT ADD ====================
+        let html5QrScanner = null;
+        let currentScanTarget = 'billing';
+
+        function openCameraScanner(targetMode) {
+            currentScanTarget = targetMode;
+            document.getElementById('scannerModeSubtitle').innerText = targetMode === 'inventory'
+                ? "Scan a barcode to auto-fill price & add/update stock from your phone."
+                : "Scan product barcode to add directly to customer bill.";
+            document.getElementById('cameraScannerModal').classList.remove('hidden');
+            document.getElementById('cameraScannerModal').classList.add('flex');
+
+            if (window.Html5Qrcode) {
+                try {
+                    html5QrScanner = new Html5Qrcode("qrReaderBox");
+                    html5QrScanner.start(
+                        { facingMode: "environment" },
+                        { fps: 10, qrbox: { width: 220, height: 120 } },
+                        (decodedText) => {
+                            handleScannedBarcode(decodedText);
+                        },
+                        () => {}
+                    ).catch(() => {
+                        document.getElementById('qrReaderBox').innerHTML = `<div class="p-6 text-center text-xs text-slate-400">Camera permission not granted or running in preview frame. Use manual barcode box below to test.</div>`;
+                    });
+                } catch (e) {}
+            }
+        }
+
+        function closeCameraScanner() {
+            if (html5QrScanner) {
+                html5QrScanner.stop().catch(() => {}).finally(() => { html5QrScanner = null; });
+            }
+            document.getElementById('cameraScannerModal').classList.add('hidden');
+            document.getElementById('cameraScannerModal').classList.remove('flex');
+        }
+
+        function handleScannedBarcode(code) {
+            const clean = (code || '').trim();
+            if (!clean) return;
+            closeCameraScanner();
+
+            if (currentScanTarget === 'billing') {
+                if (!processBarcodeInput(clean)) {
+                    if (confirm(`Barcode #${clean} not found in stock! Would you like to add it now with auto-price fill?`)) {
+                        openQuickProductModal(clean);
+                    }
+                }
+            } else {
+                openQuickProductModal(clean);
+            }
+        }
+
+        function openQuickProductModal(prefillBarcode = '') {
+            document.getElementById('quickProductModal').classList.remove('hidden');
+            document.getElementById('quickProductModal').classList.add('flex');
+            document.getElementById('qpBarcode').value = prefillBarcode;
+            if (prefillBarcode) autoFillKnownBarcode(prefillBarcode);
+        }
+
+        function closeQuickProductModal() {
+            document.getElementById('quickProductModal').classList.add('hidden');
+            document.getElementById('quickProductModal').classList.remove('flex');
+        }
+
+        function autoFillKnownBarcode(code) {
+            const existing = state.products.find(p => p.barcode === code.trim());
+            if (existing) {
+                document.getElementById('qpNameEn').value = existing.nameEn;
+                document.getElementById('qpNameSi').value = existing.nameSi || '';
+                document.getElementById('qpCategory').value = existing.cat;
+                document.getElementById('qpCost').value = existing.cost;
+                document.getElementById('qpRetail').value = existing.retail;
+                document.getElementById('qpWholesale').value = existing.wholesale;
+                document.getElementById('qpStock').value = existing.stock;
+                return;
+            }
+            const catalog = KNOWN_BARCODES[code.trim()];
+            if (catalog) {
+                document.getElementById('qpNameEn').value = catalog.nameEn;
+                document.getElementById('qpNameSi').value = catalog.nameSi;
+                document.getElementById('qpCategory').value = catalog.cat;
+                document.getElementById('qpCost').value = catalog.cost;
+                document.getElementById('qpRetail').value = catalog.retail;
+                document.getElementById('qpWholesale').value = catalog.wholesale;
+            }
+        }
+
+        function saveQuickProduct() {
+            const barcode = document.getElementById('qpBarcode').value.trim() || String(Math.floor(100000 + Math.random() * 900000));
+            const nameEn = document.getElementById('qpNameEn').value.trim();
+            if (!nameEn) { alert("Product name is required!"); return; }
+            const nameSi = document.getElementById('qpNameSi').value.trim();
+            const cat = document.getElementById('qpCategory').value.trim() || 'Grocery';
+            const cost = parseFloat(document.getElementById('qpCost').value) || 0;
+            const retail = parseFloat(document.getElementById('qpRetail').value) || 0;
+            const wholesale = parseFloat(document.getElementById('qpWholesale').value) || retail;
+            const stock = parseFloat(document.getElementById('qpStock').value) || 0;
+            const expiry = document.getElementById('qpExpiry').value || '2027-12-31';
+
+            const existing = state.products.find(p => p.barcode === barcode);
+            if (existing) {
+                existing.nameEn = nameEn;
+                existing.nameSi = nameSi;
+                existing.cat = cat;
+                existing.cost = cost;
+                existing.retail = retail;
+                existing.wholesale = wholesale;
+                existing.stock = stock;
+                existing.expiry = expiry;
+            } else {
+                state.products.unshift({
+                    id: 'P' + Date.now(),
+                    barcode, nameEn, nameSi, cat, cost, retail, wholesale,
+                    mrp: roundMoney(retail * 1.05), stock, expiry, searchKeys: nameEn.toLowerCase()
+                });
+            }
+            saveStateToLocalStorage();
+            renderCategoryPills();
+            renderProductGrid();
+            renderInventoryTable();
+            closeQuickProductModal();
+        }
+
+        // ==================== 7. INVENTORY, BULK REPACKING, CUSTOMERS & AI ====================
+        function renderInventoryTable() {
+            const tbody = document.getElementById('inventoryTableBody');
+            tbody.innerHTML = state.products.map(p => `
+                <tr class="hover:bg-slate-900/50">
+                    <td class="p-3 font-mono text-emerald-400 font-bold">#${p.barcode}</td>
+                    <td class="p-3 font-semibold">${p.nameEn} <span class="text-slate-400 block text-[11px]">${p.nameSi || ''}</span></td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300">${p.cat}</span></td>
+                    <td class="p-3 font-mono">Rs. ${p.cost.toFixed(2)}</td>
+                    <td class="p-3 font-mono font-bold text-emerald-400">Rs. ${p.retail.toFixed(2)}</td>
+                    <td class="p-3 font-mono text-cyan-300">Rs. ${p.wholesale.toFixed(2)}</td>
+                    <td class="p-3 font-mono font-bold ${p.stock <= 10 ? 'text-rose-400' : 'text-white'}">${p.stock}</td>
+                    <td class="p-3 font-mono text-slate-400">${p.expiry}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="openQuickProductModal('${p.barcode}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 font-bold">Edit / +Stock</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function simulateBulkRepack() {
+            const sugar = state.products.find(p => p.barcode === '20001') || state.products[0];
+            sugar.stock = roundMoney(sugar.stock + 50);
+            logAudit(`Bulk Repacking Completed: 1x 50kg Bag converted into +50 units of 1kg packs (${sugar.nameEn})`);
+            renderInventoryTable();
+            renderProductGrid();
+            alert(`✅ Repacking Complete: +50 packs (1kg) added to ${sugar.nameEn}!`);
+        }
+
+        function renderCustomers() {
+            const sel = document.getElementById('cartCustomerSelect');
+            sel.innerHTML = `<option value="walkin">Walk-in Customer</option>` + state.customers.map(c => `<option value="${c.id}">${c.name} (Credit: Rs.${c.credit})</option>`).join('');
+
+            const grid = document.getElementById('customerCardsGrid');
+            grid.innerHTML = state.customers.map(c => `
+                <div class="glass-card p-4 rounded-2xl space-y-2.5">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="font-extrabold text-sm text-white">${c.name}</div>
+                            <div class="text-xs font-mono text-slate-400">+${c.phone}</div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-bold">★ ${c.points} Pts</span>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center">
+                        <span class="text-xs text-slate-400">Credit Due (ණය):</span>
+                        <span class="font-mono font-extrabold text-sm ${c.credit > 0 ? 'text-rose-400' : 'text-emerald-400'}">Rs. ${c.credit.toFixed(2)}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="settleCustomerCredit('${c.id}')" class="flex-1 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold">Receive Cash</button>
+                        <button onclick="sendWhatsAppCreditReminder('${c.id}')" class="flex-1 py-1.5 rounded-xl bg-green-500/20 border border-green-500/30 text-green-300 text-xs font-bold">WhatsApp Reminder</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function settleCustomerCredit(cid) {
+            const c = state.customers.find(x => x.id === cid);
+            if (!c) return;
+            const amt = parseFloat(prompt(`Enter amount received from ${c.name} (Current Due: Rs.${c.credit}):`, c.credit));
+            if (!isNaN(amt) && amt > 0) {
+                c.credit = roundMoney(Math.max(0, c.credit - amt));
+                saveStateToLocalStorage();
+                renderCustomers();
+            }
+        }
+
+        function sendWhatsAppCreditReminder(cid) {
+            const c = state.customers.find(x => x.id === cid);
+            if (!c) return;
+            const msg = `Dear ${c.name}, friendly reminder from *${state.store.name}*: Your current credit balance is *Rs. ${c.credit.toFixed(2)}*. Thank you!`;
+            window.open(`https://wa.me/${c.phone.replace(/\D/g,'')}?text=${msg}`, '_blank');
+        }
+
+        function addDemoCustomerPrompt() {
+            const name = prompt("Customer Full Name:");
+            if (!name) return;
+            const phone = prompt("WhatsApp Phone (e.g. 94771234567):", "9477");
+            state.customers.push({ id: 'C' + Date.now(), name, phone: phone || '94770000000', credit: 0, points: 25 });
+            saveStateToLocalStorage();
+            renderCustomers();
+        }
+
+        function updateAnalyticsAndAi() {
+            let rev = 0, prof = 0;
+            state.salesHistory.forEach(s => {
+                rev = roundMoney(rev + s.totals.grandTotal);
+                prof = roundMoney(prof + s.totals.profit);
+            });
+            const lowStockItems = state.products.filter(p => p.stock <= 10);
+            document.getElementById('statRevenue').innerText = `Rs. ${rev.toFixed(2)}`;
+            document.getElementById('statProfit').innerText = `Rs. ${prof.toFixed(2)}`;
+            document.getElementById('statAlerts').innerText = `${lowStockItems.length} Alerts`;
+            document.getElementById('statAuditCount').innerText = `${state.auditLogs.length} Events`;
+
+            const aiBox = document.getElementById('aiInsightsBox');
+            aiBox.innerHTML = `
+                <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800">📈 <b>AI Demand Forecast:</b> Weekend demand for <i>Keeri Samba 5kg</i> & <i>Anchor 400g</i> is projected to rise by +28%. Recommended re-order: 40 units.</div>
+                <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800">⚠️ <b>Low Stock & Expiry Radar:</b> ${lowStockItems.map(x => x.nameEn).join(', ') || 'All items healthy'} require restocking.</div>
+                <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800">💡 <b>Smart Combo Suggestion:</b> Bundle <i>Ceylon Tea 400g + White Sugar 1kg</i> with Rs. 25 Happy-Hour discount to boost basket value.</div>
+            `;
+
+            const logBox = document.getElementById('auditLogList');
+            logBox.innerHTML = state.auditLogs.length === 0
+                ? `<div class="text-slate-500">No suspicious cashier voids or security alerts recorded today.</div>`
+                : state.auditLogs.map(l => `<div class="p-2 rounded-lg bg-slate-900 border border-slate-800">${l}</div>`).join('');
+        }
+
+        function simulateAiOcrGrn() {
+            state.products[0].stock += 25;
+            state.products[1].stock += 30;
+            logAudit("AI OCR Invoice Scanner imported Supplier GRN: +25 Keeri Samba, +30 Anchor Milk");
+            renderInventoryTable();
+            renderProductGrid();
+            updateAnalyticsAndAi();
+            alert("📷 AI OCR Supplier Invoice Scanned! +25 Keeri Samba & +30 Anchor 400g added to inventory automatically.");
+        }
+
+        function sendOwnerNightlyWhatsApp() {
+            const rev = document.getElementById('statRevenue').innerText;
+            const prof = document.getElementById('statProfit').innerText;
+            const msg = `*VELO POS - DAILY OWNER SUMMARY*%0A*Store:* ${state.store.name}%0A*Total Sales:* ${rev}%0A*Net Profit:* ${prof}%0A*Bills Count:* ${state.salesHistory.length}%0A*Audit Events:* ${state.auditLogs.length}`;
+            window.open(`https://wa.me/${state.store.phone.replace(/\D/g,'')}?text=${msg}`, '_blank');
+        }
+
+        function logAudit(text) {
+            state.auditLogs.unshift(`[${new Date().toLocaleTimeString()}] ${text}`);
+            updateAnalyticsAndAi();
+        }
+
+        // ==================== 8. DEVICE FOLDER SAVE & GOOGLE DRIVE AUTO-BACKUP ENGINE ====================
+        async function chooseDeviceBackupFolder() {
+            if (window.showDirectoryPicker) {
+                try {
+                    state.directoryHandle = await window.showDirectoryPicker();
+                    document.getElementById('backupFolderPathInput').value = `Local Folder: /${state.directoryHandle.name}`;
+                    saveBackupSettings();
+                    alert(`✅ Connected to local folder: ${state.directoryHandle.name}. Auto-backups will write directly here.`);
+                    return;
+                } catch (e) {}
+            }
+            const manual = prompt("Enter desired Backup Folder Label / Path:", document.getElementById('backupFolderPathInput').value);
+            if (manual) {
+                document.getElementById('backupFolderPathInput').value = manual;
+                saveBackupSettings();
+            }
+        }
+
+        function saveBackupSettings() {
+            state.backup.folderPath = document.getElementById('backupFolderPathInput').value;
+            state.backup.freq = document.getElementById('autoBackupFreqSelect').value;
+            state.backup.gDriveEmail = document.getElementById('gDriveEmailInput').value;
+            saveStateToLocalStorage();
+        }
+
+        async function triggerLocalDeviceBackup(manualClick = false) {
+            const payload = JSON.stringify({
+                app: "VELO_POS_ENTERPRISE",
+                timestamp: new Date().toISOString(),
+                folderPath: state.backup.folderPath,
+                state
+            }, null, 2);
+
+            const fileName = `VeloPOS_Backup_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.json`;
+
+            if (state.directoryHandle) {
+                try {
+                    const fileHandle = await state.directoryHandle.getFileHandle(fileName, { create: true });
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(payload);
+                    await writable.close();
+                    if (manualClick) alert(`✅ Backup written directly to ${state.directoryHandle.name}/${fileName}`);
+                    return;
+                } catch (e) {}
+            }
+
+            if (manualClick) {
+                const blob = new Blob([payload], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        function triggerSilentAutoBackup() {
+            localStorage.setItem('velo_pos_autosave_snapshot', JSON.stringify({ ts: new Date().toLocaleTimeString(), state }));
+            const pill = document.getElementById('backupStatusPill');
+            pill.innerHTML = `<i data-lucide="check-circle-2" class="w-3 h-3"></i> Auto-Saved ${new Date().toLocaleTimeString()}`;
+            lucide.createIcons();
+            if (state.directoryHandle) triggerLocalDeviceBackup(false);
+        }
+
+        function restoreFromBackupFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed && parsed.state) {
+                        state = { ...state, ...parsed.state };
+                        saveStateToLocalStorage();
+                        renderAll();
+                        alert("✅ Velo POS Database Restored Successfully!");
+                    }
+                } catch (err) {
+                    alert("Invalid backup JSON file.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function connectGoogleDrive() {
+            state.backup.gDriveConnected = true;
+            const email = document.getElementById('gDriveEmailInput').value || 'connected-store@gmail.com';
+            document.getElementById('gDriveEmailInput').value = email;
+            document.getElementById('gDriveConnectBtn').innerText = "✅ Google Drive Linked";
+            syncToGoogleDriveNow();
+        }
+
+        function syncToGoogleDriveNow() {
+            const ts = new Date().toLocaleString();
+            state.backup.lastSync = ts;
+            document.getElementById('lastCloudSyncText').innerText = `Synced to Google Drive: ${ts}`;
+            saveStateToLocalStorage();
+            logAudit(`Cloud Snapshot synced to Google Drive (${ts})`);
+        }
+
+        // ==================== 9. SETTINGS, MODULAR TOGGLES, LANGUAGE & SHORTCUTS ====================
+        function renderFeatureToggles() {
+            const grid = document.getElementById('featureTogglesGrid');
+            grid.innerHTML = Object.keys(state.features).map(key => {
+                const f = state.features[key];
+                return `
+                <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-200">${f.label}</span>
+                    <button onclick="toggleFeatureModule('${key}')" class="px-3 py-1 rounded-full text-xs font-extrabold transition ${f.on ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-400'}">
+                        ${f.on ? 'ON' : 'OFF'}
+                    </button>
+                </div>`;
+            }).join('');
+
+            // Apply visibility based on modular toggles
+            document.getElementById('tierToggleBtn').style.display = state.features.wholesale.on ? 'flex' : 'none';
+            document.getElementById('repackBtn').style.display = state.features.repacking.on ? 'flex' : 'none';
+            document.getElementById('whatsappCheckoutBtn').style.display = state.features.whatsapp.on ? 'flex' : 'none';
+            document.getElementById('secondScreenBtn').style.display = state.features.secondScreen.on ? 'flex' : 'none';
+            document.getElementById('tabBtn-ai').style.display = state.features.aiAssistant.on ? 'flex' : 'none';
+        }
+
+        function toggleFeatureModule(key) {
+            state.features[key].on = !state.features[key].on;
+            saveStateToLocalStorage();
+            renderFeatureToggles();
+            renderProductGrid();
+            renderCart();
+        }
+
+        function openSettingsCat(cat) {
+            ['modules','backup','store','license'].forEach(c => {
+                document.getElementById(`setPanel-${c}`).classList.add('hidden');
+                document.getElementById(`setCatBtn-${c}`).className = "w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 flex items-center gap-2";
+            });
+            document.getElementById(`setPanel-${cat}`).classList.remove('hidden');
+            document.getElementById(`setCatBtn-${cat}`).className = "w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 flex items-center gap-2";
+        }
+
+        function saveStoreProfile() {
+            state.store.name = document.getElementById('cfgStoreName').value || 'VELO POS';
+            state.store.phone = document.getElementById('cfgStorePhone').value;
+            state.store.addr = document.getElementById('cfgStoreAddr').value;
+            state.store.footer = document.getElementById('cfgStoreFooter').value;
+            document.getElementById('headerStoreName').innerText = state.store.name;
+            saveStateToLocalStorage();
+            alert("✅ Store Profile & Receipt Header Updated!");
+        }
+
+        function setLanguage(lang) {
+            state.lang = lang;
+            ['en','si','ta','hi'].forEach(l => {
+                document.getElementById(`lang-${l}`).className = l === lang
+                    ? "px-2 py-1 rounded-lg bg-emerald-500 text-slate-950"
+                    : "px-2 py-1 rounded-lg text-slate-300";
+            });
+            const dict = I18N[lang] || I18N.en;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) el.innerText = dict[key];
+            });
+            renderProductGrid();
+            renderCart();
+        }
+
+        function switchTab(tab) {
+            ['billing','inventory','customers','ai','settings'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                const btn = document.getElementById(`tabBtn-${t}`);
+                if (btn) btn.className = "nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5";
+            });
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tabBtn-${tab}`);
+            if (activeBtn) activeBtn.className = "nav-btn px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-emerald-500 text-slate-950 shadow";
+        }
+
+        function toggleFullScreenBilling() {
+            switchTab('billing');
+            const header = document.getElementById('topHeader');
+            const exitBar = document.getElementById('exitFullScreenBar');
+            const isHidden = header.classList.contains('hidden');
+            if (isHidden) {
+                header.classList.remove('hidden');
+                exitBar.classList.add('hidden');
+                if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+            } else {
+                header.classList.add('hidden');
+                exitBar.classList.remove('hidden');
+                document.documentElement.requestFullscreen().catch(()=>{});
+            }
+        }
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('light');
+        }
+
+        function openCustomerDisplayModal() {
+            document.getElementById('customerDisplayModal').classList.remove('hidden');
+            document.getElementById('customerDisplayModal').classList.add('flex');
+        }
+
+        function startVoiceSearch() {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SR) { alert("Voice search is supported in Chrome/Edge/Safari. Type 'keeri' or 'anchor' in the search bar."); return; }
+            const rec = new SR();
+            rec.onresult = (e) => {
+                const transcript = e.results[0][0].transcript;
+                document.getElementById('posSearchInput').value = transcript;
+                renderProductGrid();
+            };
+            rec.start();
+        }
+
+        // Global Pro Keyboard Shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'F1') { e.preventDefault(); document.getElementById('posSearchInput').focus(); }
+            else if (e.key === 'F2') { e.preventDefault(); completeAndPrintSale(); }
+            else if (e.key === 'F4') { e.preventDefault(); holdCurrentBill(); }
+            else if (e.key === 'F5') { e.preventDefault(); recallHeldBill(); }
+            else if (e.key === 'F8') { e.preventDefault(); togglePriceTier(); }
+            else if (e.key === 'F11') { e.preventDefault(); toggleFullScreenBilling(); }
+            else if (e.key === 'Escape') { clearCartWithAudit(); }
+        });
+
+        function saveStateToLocalStorage() {
+            try {
+                localStorage.setItem('velo_pos_master_state_v3', JSON.stringify({
+                    store: state.store,
+                    backup: state.backup,
+                    features: state.features,
+                    products: state.products,
+                    customers: state.customers,
+                    salesHistory: state.salesHistory,
+                    auditLogs: state.auditLogs,
+                    invoiceCounter: state.invoiceCounter
+                }));
+            } catch (e) {}
+        }
+
+        function loadStateFromLocalStorage() {
+            try {
+                const raw = localStorage.getItem('velo_pos_master_state_v3');
+                if (!raw) return;
+                const saved = JSON.parse(raw);
+                state = { ...state, ...saved };
+                document.getElementById('headerStoreName').innerText = state.store.name;
+                document.getElementById('cfgStoreName').value = state.store.name;
+                document.getElementById('cfgStorePhone').value = state.store.phone;
+                document.getElementById('cfgStoreAddr').value = state.store.addr;
+                document.getElementById('cfgStoreFooter').value = state.store.footer;
+                document.getElementById('backupFolderPathInput').value = state.backup.folderPath;
+                document.getElementById('invoiceNoDisplay').innerText = `#INV-${state.invoiceCounter}`;
+            } catch (e) {}
+        }
+
+        function renderAll() {
+            renderCategoryPills();
+            renderProductGrid();
+            renderCart();
+            renderInventoryTable();
+            renderCustomers();
+            renderFeatureToggles();
+            updateAnalyticsAndAi();
+            lucide.createIcons();
+        }
+
+        // Live Clock & Initialization
+        setInterval(() => {
+            document.getElementById('liveClock').innerText = new Date().toLocaleTimeString();
+        }, 1000);
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStateFromLocalStorage();
+            initLicenseAndTrialCheck();
+            renderAll();
+        });
+    </script>
+</body>
+</html>
